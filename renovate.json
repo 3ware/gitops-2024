@@ -1,0 +1,7 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "enabledManagers": ["tflint-plugin"],
+  "minimumReleaseAge": "3 days",
+  "addLabels": ["auto-update"],
+  "schedule": ["before 4am on the first day of the month"]
+}
