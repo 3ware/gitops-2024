@@ -1,0 +1,18 @@
+name: Release
+run-name: ${{ github.event.workflow_run.display_title }}
+
+on:
+  workflow_run:
+    workflows: [OpenTofu CI]
+    types: [completed]
+    branches: [main]
+
+# Disable permissions for all available scopes
+permissions: {}
+
+jobs:
+  semantic-release:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    name: Release
+    uses: 3ware/workflows/.github/workflows/release.yaml@7880d6b986d1d689f5d219e901b863f1378fea9c # v4.4.0
+    secrets: inherit

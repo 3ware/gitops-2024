@@ -1,0 +1,14 @@
+name: PR Check
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+
+# Disable permissions for all available scopes
+permissions: {}
+
+jobs:
+  validate-pr-title:
+    name: Validate PR title
+    permissions:
+      pull-requests: write
+    uses: 3ware/workflows/.github/workflows/pr-title.yaml@7880d6b986d1d689f5d219e901b863f1378fea9c # v4.4.0
