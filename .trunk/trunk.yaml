@@ -2,12 +2,12 @@
 # To learn more about the format of this file, see https://docs.trunk.io/reference/trunk-yaml
 version: 0.1
 cli:
-  version: 1.22.6
+  version: 1.22.4
 # Trunk provides extensibility via plugins. (https://docs.trunk.io/plugins)
 plugins:
   sources:
     - id: trunk
-      ref: v1.6.3
+      ref: v1.6.2
       uri: https://github.com/trunk-io/plugins
 # Many linters and tools depend on runtimes - configure them here. (https://docs.trunk.io/runtimes)
 runtimes:
@@ -36,12 +36,12 @@ lint:
           value: ${workspace}/.trunk/configs/.tflint.hcl
         - name: TFLINT_PLUGIN_DIR
           value: ${workspace}/.trunk/plugins/
-        - name: AWS_ACCESS_KEY_ID
-          value: ${env.AWS_ACCESS_KEY_ID}
-        - name: AWS_SECRET_ACCESS_KEY
-          value: ${env.AWS_SECRET_ACCESS_KEY}
-        - name: AWS_SESSION_TOKEN
-          value: ${env.AWS_SESSION_TOKEN}
+        # - name: AWS_ACCESS_KEY_ID
+        #   value: ${env.AWS_ACCESS_KEY_ID}
+        # - name: AWS_SECRET_ACCESS_KEY
+        #   value: ${env.AWS_SECRET_ACCESS_KEY}
+        # - name: AWS_SESSION_TOKEN
+        #   value: ${env.AWS_SESSION_TOKEN}
     - name: tofu
       environment:
         - name: XDG_CONFIG_HOME
