@@ -1,19 +1,3 @@
-data "aws_ami" "ubuntu" {
-  most_recent = true
-
-  filter {
-    name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
-  }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
-
-  owners = ["099720109477"] # Canonical
-}
-
 resource "aws_vpc" "gitops_vpc" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_support   = true
@@ -64,24 +48,58 @@ resource "aws_security_group" "gitops_sg" {
   name        = "gitops_sg"
   description = "Allow port 3000"
   vpc_id      = aws_vpc.gitops_vpc.id
+}
 
-  ingress {
-    from_port   = 3000
-    to_port     = 3000
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+# trunk-ignore(trivy/AVD-AWS-0104): Unrestricted ingress traffic permitted for demo purposes
+resource "aws_vpc_security_group_egress_rule" "grafana_ingress" {
+  description       = "Inbound traffic to grafana web interface"
+  security_group_id = aws_security_group.gitops_sg.id
+  cidr_ipv4         = "0.0.0.0/0"
+  from_port         = 3000
+  ip_protocol       = "tcp"
+  to_port           = 3000
 
   tags = {
-    Name = "gitops-sg"
+    Name = "grafana-ingress-sg-rule"
   }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+# trunk-ignore(trivy/AVD-AWS-0104): Unrestricted egress traffic permitted for demo purposes
+resource "aws_vpc_security_group_egress_rule" "grafana_egress" {
+  description       = "Outbound traffic from grafana server"
+  security_group_id = aws_security_group.gitops_sg.id
+  cidr_ipv4         = "0.0.0.0/0"
+  from_port         = 0
+  ip_protocol       = "-1"
+  to_port           = 0
+
+  tags = {
+    Name = "grafana-egress-sg-rule"
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+data "aws_ami" "ubuntu" {
+  most_recent = true
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  owners = ["099720109477"] # Canonical
 }
 
 resource "aws_instance" "grafana_server" {
