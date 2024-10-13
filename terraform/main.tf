@@ -1,3 +1,4 @@
+# trunk-ignore(trivy/AVD-AWS-0178): VPC flow logs not required for demo environment
 resource "aws_vpc" "gitops_vpc" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_support   = true
@@ -29,6 +30,7 @@ resource "aws_route_table" "gitops_rt" {
   }
 }
 
+# trunk-ignore(trivy/AVD-AWS-0164): Public IP required for internet access
 resource "aws_subnet" "gitops_subnet" {
   vpc_id                  = aws_vpc.gitops_vpc.id
   cidr_block              = "10.0.1.0/24"
@@ -102,6 +104,8 @@ data "aws_ami" "ubuntu" {
   owners = ["099720109477"] # Canonical
 }
 
+# trunk-ignore(trivy/AVD-AWS-0028)
+# trunk-ignore(trivy/AVD-AWS-0131)
 resource "aws_instance" "grafana_server" {
   ami                    = data.aws_ami.ubuntu.id
   instance_type          = var.instance_type

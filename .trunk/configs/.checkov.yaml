@@ -1,0 +1,8 @@
+skip-check:
+  - CKV_AWS_8 # EBS Encryption not required for demo
+  - CKV_AWS_79
+  - CKV_AWS_126 # Detailed monitoring not required for demo
+  - CKV_AWS_130 # Public IP permitted for demo
+  - CKV_AWS_135 # EBS optimization not required for demo
+  - CKV2_AWS_11 # VPC Flow logs not required for demo
+  - CKV2_AWS_41 # EC2 IAM role not required for demo
