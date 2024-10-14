@@ -36,12 +36,15 @@ lint:
           value: ${workspace}/.trunk/configs/.tflint.hcl
         - name: TFLINT_PLUGIN_DIR
           value: ${workspace}/.trunk/plugins/
-        # - name: AWS_ACCESS_KEY_ID
-        #   value: ${env.AWS_ACCESS_KEY_ID}
-        # - name: AWS_SECRET_ACCESS_KEY
-        #   value: ${env.AWS_SECRET_ACCESS_KEY}
-        # - name: AWS_SESSION_TOKEN
-        #   value: ${env.AWS_SESSION_TOKEN}
+        - name: AWS_ACCESS_KEY_ID
+          value: ${env.AWS_ACCESS_KEY_ID}
+          optional: true
+        - name: AWS_SECRET_ACCESS_KEY
+          value: ${env.AWS_SECRET_ACCESS_KEY}
+          optional: true
+        - name: AWS_SESSION_TOKEN
+          value: ${env.AWS_SESSION_TOKEN}
+          optional: true
     - name: tofu
       environment:
         - name: XDG_CONFIG_HOME
