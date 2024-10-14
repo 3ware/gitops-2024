@@ -9,6 +9,10 @@ resource "aws_vpc" "gitops_vpc" {
   }
 }
 
+resource "aws_default_security_group" "default" {
+  vpc_id = aws_vpc.gitops_vpc.id
+}
+
 resource "aws_internet_gateway" "gitops_igw" {
   vpc_id = aws_vpc.gitops_vpc.id
 
