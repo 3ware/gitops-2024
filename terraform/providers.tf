@@ -9,4 +9,11 @@ terraform {
 
 provider "aws" {
   region = var.region
+  default_tags {
+    tags = {
+      "3ware:project-id"      = "gitops-2024"
+      "3ware:environment"     = var.environment
+      "3ware:managed-by-tofu" = true
+    }
+  }
 }
