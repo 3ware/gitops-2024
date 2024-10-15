@@ -15,7 +15,6 @@ locals {
   environment       = element(local.workspace_split, length(local.workspace_split) - 1)
 }
 
-# trunk-ignore(tflint/terraform_unused_declarations): Data source used to validate environment tag
 data "aws_default_tags" "this" {
   lifecycle {
     postcondition {
@@ -24,8 +23,7 @@ data "aws_default_tags" "this" {
       ])
       error_message = format(
         "Invalid environment tag specified. Received: '%s', Require: '%s'.\n%s",
-        # TODO: This should be the actual value received self?
-        local.environment,
+        self.tags["3ware:environment"],
         join(", ", local.valid_environment),
         "Rename workspace with a valid environment suffix."
       )
