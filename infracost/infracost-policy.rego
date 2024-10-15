@@ -1,6 +1,7 @@
 package infracost # You must specify infracost as the Rego package name
 
-import rego.v1
+# Infracost action fails with this enabled
+# import rego.v1
 
 deny[out] if {
 	# max_diff defines the threshold that you require the cost estimate to be below
