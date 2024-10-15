@@ -1,20 +1,20 @@
-locals {
-  valid_instance_types = ["t3.micro"]
-}
+# locals {
+#   valid_instance_types = ["t3.micro"]
+# }
 
 variable "instance_type" {
   description = "(Required) Instance type to use. Should be within the free tier"
   type        = string
 
-  validation {
-    condition = contains(local.valid_instance_types, var.instance_type)
-    error_message = format(
-      "Invalid instance type provided. Received: '%s', Require: '%v'.\n%s",
-      var.instance_type,
-      join(", ", local.valid_instance_types),
-      "Change the instance type variable to one that is permitted."
-    )
-  }
+  # validation {
+  #   condition = contains(local.valid_instance_types, var.instance_type)
+  #   error_message = format(
+  #     "Invalid instance type provided. Received: '%s', Require: '%v'.\n%s",
+  #     var.instance_type,
+  #     join(", ", local.valid_instance_types),
+  #     "Change the instance type variable to one that is permitted."
+  #   )
+  # }
 }
 
 variable "project_id" {
