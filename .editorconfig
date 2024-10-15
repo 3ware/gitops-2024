@@ -16,3 +16,7 @@ insert_final_newline = true
 # for a newline
 [*.md]
 trim_trailing_whitespace = false
+
+[*.rego]
+indent_style = tab
+indent_size = 4

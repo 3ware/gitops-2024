@@ -1,0 +1,68 @@
+name: Infracost
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize]
+    paths:
+      - "**/*.tf"
+      - "**/*.tfvars"
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.repository }}
+  cancel-in-progress: true
+
+jobs:
+  infracost:
+    name: Infracost Pull Request Checks
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: ./terraform
+    permissions:
+      contents: read
+      pull-requests: write
+    timeout-minutes: 10
+    steps:
+      - name: Setup Infracost
+        uses: infracost/actions/setup@e9d6e6cd65e168e76b0de50ff9957d2fe8bb1832 # v3.0.0
+        with:
+          api-key: ${{ secrets.INFRACOST_API_KEY }}
+
+      # Checkout the base branch of the pull request
+      - name: Checkout repository
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        with:
+          ref: ${{ github.event.pull_request.base.ref }}
+
+      # Generate Infracost JSON file as the baseline.
+      - name: Generate Infracost cost estimate baseline
+        run: |
+          infracost breakdown --path=. \
+                              --format=json \
+                              --out-file=/tmp/infracost-base.json
+
+      # Checkout the current PR branch so we can create a diff.
+      - name: Checkout PR branch
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      # Generate an Infracost diff and save it to a JSON file.
+      - name: Generate Infracost diff
+        run: |
+          infracost diff --path=. \
+                          --format=json \
+                          --compare-to=/tmp/infracost-base.json \
+                          --out-file=/tmp/infracost.json
+
+      # Posts a comment to the PR using the 'update' behavior.
+      - name: Post Infracost comment
+        run: |
+          infracost comment github --path=/tmp/infracost.json \
+                                    --repo=$GITHUB_REPOSITORY \
+                                    --github-token=${{ github.token }} \
+                                    --pull-request=${{ github.event.pull_request.number }} \
+                                    --behavior=update
+                                    --policy-path infracost-policy.rego
