@@ -28,4 +28,4 @@ jobs:
       - name: Trunk Check
         uses: trunk-io/trunk-action@0c109cf103b1bf745bb0cd8ec19d00a4609527d8 # v1.1.17
         with:
-          arguments: --filter -tflint,-tofu
+          arguments: --filter -tflint,-terraform
