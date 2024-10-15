@@ -6,7 +6,8 @@ terraform {
     hostname     = "app.terraform.io"
 
     workspaces {
-      name = "gitops-2024"
+      tags    = ["gitops", "mtc", "aws"]
+      project = "gitops-2024"
     }
   }
 }
