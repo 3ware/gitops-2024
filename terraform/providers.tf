@@ -19,9 +19,12 @@ locals {
 data "aws_default_tags" "this" {
   lifecycle {
     postcondition {
-      condition = contains(values(self.tags), local.valid_environment)
+      condition = anytrue([
+        for tag in values(self.tags) : contains(local.valid_environment, tag)
+      ])
       error_message = format(
         "Invalid environment tag specified. Received: '%s', Require: '%s'.\n%s",
+        # TODO: This should be the actual value received self?
         local.environment,
         join(", ", local.valid_environment),
         "Rename workspace with a valid environment suffix."
