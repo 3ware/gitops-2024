@@ -20,7 +20,7 @@ lint:
     - renovate@38.117.1
     - trivy@0.56.2
     - tflint@0.53.0
-    - tofu@1.8.3:
+    - terraform@1.9.7:
         commands: [fmt, validate]
     - actionlint@1.7.3
     - checkov@3.2.257
