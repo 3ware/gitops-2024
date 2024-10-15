@@ -60,9 +60,9 @@ jobs:
       # Posts a comment to the PR using the 'update' behavior.
       - name: Post Infracost comment
         run: |
-          infracost comment github --path=/tmp/infracost.json \
-                                    --repo=$GITHUB_REPOSITORY \
-                                    --github-token=${{ github.token }} \
-                                    --pull-request=${{ github.event.pull_request.number }} \
-                                    --behavior=update
-                                    --policy-path=infracost-policy.rego
+          infracost comment github --path /tmp/infracost.json \
+                                    --repo $GITHUB_REPOSITORY \
+                                    --github-token ${{ github.token }} \
+                                    --pull-request ${{ github.event.pull_request.number }} \
+                                    --behavior update \
+                                    --policy-path infracost-policy.rego
