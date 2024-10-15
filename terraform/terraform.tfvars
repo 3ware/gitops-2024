@@ -1,5 +1,5 @@
 instance_type     = "t3.micro"
 project_id        = "gitops-2024"
 region            = "us-east-1"
-subnet_cidr_block = "10.0.1.0/24"
+subnet_cidr_block = "10.0.2.0/24"
 vpc_cidr_block    = "10.0.0.0/16"
