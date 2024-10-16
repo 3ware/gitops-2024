@@ -65,13 +65,14 @@ jobs:
 
       # Initialise terraform in the directory where terraform file have changed.
       - name: Initialise terraform
+        id: tf-init
         run: |
           terraform init -backend=false
 
       # Run terraform validate
       - name: Terraform validate
         id: tf-validate
-        run: terraform validate -json
+        run: terraform validate -no-color
         continue-on-error: true
 
       - name: Add PR comment on failure
@@ -80,13 +81,24 @@ jobs:
         with:
           header: Terraform validation error
           message: |
-            Details:
+            #### Terraform Format and Style 🖌\`${{ steps.tf-fmt.outcome }}\`
+
+            The following files were formatted:
             ```
-            ${{ steps.tf-fmt.outcome }}
-            ${{ steps.tf-validate.outcome }}
             ${{ steps.tf-fmt.outputs.stdout }}
+            ```
+
+            #### Terraform Initialization ⚙️\`${{ steps.tf-init.outcome }}\`
+            #### Terraform Validation 🤖\`${{ steps.tf-validate.outcome }}\`
+
+            ```
             ${{ steps.tf-validate.outputs.stdout }}
             ```
+
+      - name: Fail deployment
+        if: ${{ steps.tf-fmt.outputs.exitcode != 0 || steps.tf-validate.outputs.exitcode != 0 }}
+        run: |
+          exit 1
 
       # - name: Delete PR comment on resolution
       #   if: ${{ always() && steps.validate-pr-title.outputs.error_message == null }}
