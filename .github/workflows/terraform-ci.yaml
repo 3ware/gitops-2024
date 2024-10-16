@@ -75,19 +75,25 @@ jobs:
         run: terraform validate
         continue-on-error: true
 
+      - name: Terraform validate output
+        id: tfv-out
+        run: |
+          echo ${{ steps.tf-validate.outputs.stdout }}
+
       - name: Add PR comment on failure
         if: ${{ steps.tf-fmt.outputs.exitcode != 0 || steps.tf-validate.outputs.exitcode != 0 }}
         uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
         with:
           header: Terraform validation error
           message: |
-            #### Terraform Format and Style 🖌${{ steps.tf-fmt.outcome }}
+            #### Terraform Format and Style ${{ steps.tf-fmt.outcome }}
 
             The following files were formatted:
             ${{ steps.tf-fmt.outputs.stdout }}
 
-            #### Terraform Initialization ⚙️${{ steps.tf-init.outcome }}
-            #### Terraform Validation 🤖${{ steps.tf-validate.outcome }}
+            #### Terraform Initialization ${{ steps.tf-init.outcome }}
+            #### Terraform Validation ${{ steps.tf-validate.outcome }}
+
             ```
             ${{ steps.tf-validate.outputs.stdout }}
             ```
