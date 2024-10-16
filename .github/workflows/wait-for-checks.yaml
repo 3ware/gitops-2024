@@ -2,8 +2,8 @@ name: Checks
 
 on:
   pull_request:
-    types: [opened, edited, synchronize]
     branches: [main]
+    types: [opened, edited, synchronize]
 
 # Disable permissions for all available scopes
 permissions: {}
