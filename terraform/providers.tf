@@ -8,7 +8,6 @@ terraform {
   }
 }
 
-# TODO: Migrate these to a sops encrypted file
 locals {
   valid_account_no = {
     development = "713881824542"
