@@ -80,13 +80,14 @@ jobs:
         uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
         with:
           header: Terraform validation error
+          hide_and_recreate: true
+          hide_classify: OUTDATED
           message: |
-            #### Terraform Format and Style ${{ steps.tf-fmt.outcome }}:
+            #### Terraform Format and Style ${{ steps.tf-fmt.outcome }} :x:
 
             ${{ steps.tf-fmt.outputs.stdout }}
 
-            #### Terraform Initialization ${{ steps.tf-init.outcome }}
-            #### Terraform Validation ${{ steps.tf-validate.outcome }}:
+            #### Terraform Validation ${{ steps.tf-validate.outcome }} :x:
 
             ```
             ${{ steps.tf-validate.outputs.stderr }}
@@ -123,8 +124,10 @@ jobs:
         uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
         with:
           header: TLint error
+          hide_and_recreate: true
+          hide_classify: OUTDATED
           message: |
-            #### TFLint ${{ steps.tflint.outcome }}:
+            #### TFLint failure :x:
 
             ```
             ${{ steps.tflint.outputs.stdout }}
@@ -142,6 +145,15 @@ jobs:
         uses: trunk-io/trunk-action@2eaee169140ec559bd556208f9f99cdfdf468da8 # v1.1.17
         with:
           arguments: --filter checkov,trivy
+
+      - name: Add PR comment for Test success
+        uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
+        with:
+          header: TF Success
+          message: |
+            #### Terraform Format and Style ${{ steps.tf-fmt.outcome }} :white_check_mark:
+            #### Terraform Validation ${{ steps.tf-validate.outcome }} :white_check_mark:
+            #### TFLint ${{ steps.tf-validate.outcome }} :white_check_mark:
 
   # plan-and-apply-dev:
   #   name: Terraform Deploy
