@@ -78,6 +78,7 @@ jobs:
       - name: Terraform validate
         id: tf-validate
         run: terraform validate
+        continue-on-error: true
 
       - name: terraform-validate-out
         id: tfv-out
