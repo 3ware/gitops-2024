@@ -72,7 +72,7 @@ jobs:
       # Run terraform validate
       - name: Terraform validate
         id: tf-validate
-        run: terraform validate
+        run: terraform validate -no-color
         continue-on-error: true
 
       - name: Add PR comment on failure
