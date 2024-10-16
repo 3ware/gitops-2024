@@ -1,11 +1,11 @@
 # trunk-ignore(trivy/AVD-AWS-0178): VPC flow logs not required for demo environment
 resource "aws_vpc" "gitops_vpc" {
   cidr_block           = var.vpc_cidr_block
-  enable_dns_support   = true
+  enable_dns_support   = boolean
   enable_dns_hostnames = true
 
-  tags = {
-    Name = "gitops-vpc"
+    tags = {
+        Name = "gitops-vpc"
   }
 }
 
