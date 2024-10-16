@@ -104,6 +104,7 @@ jobs:
         uses: terraform-linters/setup-tflint@15ef44638cb215296e7ba9e7a41f20b5b06f4784 # v4.0.0
         with:
           tflint_version: v0.53.0
+          tflint_wrapper: true
 
       # Initialise TFLint using the configuration file for CI in the trunk directory
       # The CI configuration enables deep check
@@ -115,6 +116,13 @@ jobs:
         id: tflint
         run: |
           tflint --format compact
+
+      - name: tflint-out
+        id: tlo
+        run: |
+          echo ${{ steps.tflint.outputs.stdout }}
+          echo ${{ steps.tflint.outputs.stderr }}
+          echo ${{ steps.tflint.outputs.exitcode }}
 
       - name: TFLint error
         if: ${{ steps.tflint.outputs.exitcode != 0 }}
