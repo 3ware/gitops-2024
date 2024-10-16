@@ -1,0 +1,130 @@
+name: Terraform CI
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "**/*.tf"
+      - "**/*.tfvars"
+
+# Disable permissions for all available scopes.
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.repository }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+    working-directory: ./terraform
+
+jobs:
+  trunk-check-tf:
+    name: Trunk Check Terraform
+    runs-on: ubuntu-latest
+    permissions:
+      checks: write
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      # AWS Credentials required for tflint deep check
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # v4.0.2
+        with:
+          aws-region: us-east-1
+          mask-aws-account-id: true
+          role-to-assume: ${{ secrets.AWS_DEV_OIDC_ROLE_ARN }}
+          role-session-name: tflint-trunk-check
+
+      - name: Cache TFLint plugin directory
+        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+        with:
+          path: .trunk/plugins/
+          key: ${{ runner.os }}-3ware-ans-tflint-${{ hashFiles('.trunk/configs/.tflint.hcl') }}
+
+      # Install terraform; required to initialise working directory
+      - name: Setup terraform
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+
+      # Initialise terraform in the directory where terraform file have changed.
+      - name: Initialise terraform
+        run: |
+          terraform init -backend=false
+
+      # Install TFLint; required to download plugins
+      - name: Install TFLint
+        uses: terraform-linters/setup-tflint@15ef44638cb215296e7ba9e7a41f20b5b06f4784 # v4.0.0
+        with:
+          tflint_version: v0.53.0
+
+      # Initialise TFLint using the configuration file in the trunk directory
+      - name: Initialise TFLint
+        shell: bash
+        run: |
+          tflint --init --config=$GITHUB_WORKSPACE/.trunk/configs/.tflint.hcl
+
+      # Run Trunk Check
+      - name: Trunk Check
+        uses: trunk-io/trunk-action@2eaee169140ec559bd556208f9f99cdfdf468da8 # v1.1.17
+        with:
+          arguments: --filter tflint,terraform,checkov,trivy
+
+  plan-and-apply-dev:
+    name: Terraform Deploy
+    needs: [trunk-check-tf]
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read # Required to download repository artifact.
+      checks: write # Required to add status summary.
+      contents: read # Required to checkout repository.
+      id-token: write # Required to authenticate via OIDC.
+      pull-requests: write # Required to add PR comment and label.
+
+    env:
+      TF_TOKEN_APP_TERRAFORM_IO: ${{ secrets.TF_TOKEN_APP_TERRAFORM_IO }}
+
+    environment: development
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # v4.0.2
+        with:
+          aws-region: us-east-1
+          role-to-assume: ${{ secrets.AWS_DEV_OIDC_ROLE_ARN }}
+
+      - name: Setup terraform
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+        with:
+          terraform_version: 1.9.7
+          terraform_wrapper: true
+
+      - name: Plan
+        uses: devsectop/tf-via-pr@cc83c7bae8216e747bb8c074524665b2416822f5 # v11.4.6
+        with:
+          arg_command: plan
+          arg_lock: false
+
+      - name: Apply
+        uses: devsectop/tf-via-pr@cc83c7bae8216e747bb8c074524665b2416822f5 # v11.4.6
+        with:
+          arg_command: apply
+          arg_auto_approve: true
+          arg_lock: true
+
+      # This plan should not produce a diff
+      - name: Check idempotency
+        id: idempotency
+        uses: devsectop/tf-via-pr@cc83c7bae8216e747bb8c074524665b2416822f5 # v11.4.6
+        with:
+          arg_command: plan
+          arg_lock: false
+          arg_detailed_exitcode: true
+          arg_out: tfplan-check # Give this plan a different name
