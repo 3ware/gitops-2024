@@ -72,7 +72,7 @@ jobs:
       # Run terraform validate
       - name: Terraform validate
         id: tf-validate
-        run: terraform validate -no-color
+        run: terraform validate
         continue-on-error: true
 
       - name: Add PR comment on failure
@@ -81,21 +81,18 @@ jobs:
         with:
           header: Terraform validation error
           message: |
-            #### Terraform Format and Style 🖌\`${{ steps.tf-fmt.outcome }}\`
+            #### Terraform Format and Style 🖌${{ steps.tf-fmt.outcome }}
 
             The following files were formatted:
-            ```
             ${{ steps.tf-fmt.outputs.stdout }}
-            ```
 
-            #### Terraform Initialization ⚙️\`${{ steps.tf-init.outcome }}\`
-            #### Terraform Validation 🤖\`${{ steps.tf-validate.outcome }}\`
-
+            #### Terraform Initialization ⚙️${{ steps.tf-init.outcome }}
+            #### Terraform Validation 🤖${{ steps.tf-validate.outcome }}
             ```
             ${{ steps.tf-validate.outputs.stdout }}
             ```
 
-      - name: Fail deployment
+      - name: Fail deployment on error
         if: ${{ steps.tf-fmt.outputs.exitcode != 0 || steps.tf-validate.outputs.exitcode != 0 }}
         run: |
           exit 1
