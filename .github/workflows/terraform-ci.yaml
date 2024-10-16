@@ -115,7 +115,7 @@ jobs:
       - name: Run TFLint
         id: tflint
         run: |
-          tflint --format compact
+          tflint --chdir=./terraform --format compact --config=$GITHUB_WORKSPACE/.trunk/configs/.tflint_ci.hcl
 
       - name: tflint-out
         id: tlo
