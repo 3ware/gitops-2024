@@ -31,10 +31,8 @@ data "aws_caller_identity" "current" {
 
 locals {
   # Defines a list of permitted environment tag values. Used by the postcondition in the aws_default_tags data source
-  # to validate the environment tag extrapolated from the workspace name by the local values below
+  # to validate the environment tag extrapolated from the workspace name in data.tf
   valid_environment = ["development", "production"]
-  workspace_split   = split("-", terraform.workspace)
-  environment       = element(local.workspace_split, length(local.workspace_split) - 1)
 }
 
 data "aws_default_tags" "this" {

@@ -5,7 +5,7 @@ resource "aws_vpc" "gitops_vpc" {
   enable_dns_hostnames = true
 
   tags = {
-    Name = "gitops-vpc"
+    Name = "gitops-vpc-${local.environment}"
   }
 }
 
@@ -17,7 +17,7 @@ resource "aws_internet_gateway" "gitops_igw" {
   vpc_id = aws_vpc.gitops_vpc.id
 
   tags = {
-    Name = "gitops-igw"
+    Name = "gitops-igw-${local.environment}"
   }
 }
 
@@ -30,7 +30,7 @@ resource "aws_route_table" "gitops_rt" {
   }
 
   tags = {
-    Name = "gitops-rt"
+    Name = "gitops-rt-${local.environment}"
   }
 }
 
@@ -41,7 +41,7 @@ resource "aws_subnet" "gitops_subnet" {
   map_public_ip_on_launch = true
 
   tags = {
-    Name = "gitops-subnet"
+    Name = "gitops-subnet-${local.environment}"
   }
 }
 
@@ -56,8 +56,7 @@ resource "aws_security_group" "grafana_sg" {
   vpc_id      = aws_vpc.gitops_vpc.id
 }
 
-# trunk-ignore(trivy/AVD-AWS-0104): Unrestricted ingress traffic permitted for demo purposes
-resource "aws_vpc_security_group_egress_rule" "grafana_ingress" {
+resource "aws_vpc_security_group_ingress_rule" "grafana_ingress" {
   description       = "Inbound traffic to grafana web interface"
   security_group_id = aws_security_group.grafana_sg.id
   cidr_ipv4         = "0.0.0.0/0"
@@ -66,7 +65,7 @@ resource "aws_vpc_security_group_egress_rule" "grafana_ingress" {
   to_port           = 3000
 
   tags = {
-    Name = "grafana-ingress-sg-rule"
+    Name = "grafana-ingress-sg-rule-${local.environment}"
   }
 
   lifecycle {
@@ -84,7 +83,7 @@ resource "aws_vpc_security_group_egress_rule" "grafana_egress" {
   to_port           = 0
 
   tags = {
-    Name = "grafana-egress-sg-rule"
+    Name = "grafana-egress-sg-rule-${local.environment}"
   }
 
   lifecycle {
@@ -118,6 +117,6 @@ resource "aws_instance" "grafana_server" {
   user_data              = file("userdata.tftpl")
 
   tags = {
-    Name = "grafana-server"
+    Name = "grafana-server-${local.environment}"
   }
 }
