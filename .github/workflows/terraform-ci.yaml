@@ -115,8 +115,13 @@ jobs:
       - name: Run TFLint
         id: tflint
         run: |
-          tflint --config=$GITHUB_WORKSPACE/.trunk/configs/.tflint_ci.hcl --format sarif > $GITHUB_WORKSPACE/tflint-out.sarif
+          tflint --config=$GITHUB_WORKSPACE/.trunk/configs/.tflint_ci.hcl --format sarif > tflint-out.sarif
         continue-on-error: true
+
+      - name: TFLint test
+        run: |
+          pwd
+          ls
 
       # - name: tflint-out
       #   id: tlo
