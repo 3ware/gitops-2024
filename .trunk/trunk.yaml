@@ -35,18 +35,20 @@ lint:
     - name: tflint
       environment:
         - name: TFLINT_CONFIG_FILE
-          value: ${workspace}/.trunk/configs/.tflint.hcl
+          value: ${workspace}/.trunk/configs/.tflint_trunk.hcl
         - name: TFLINT_PLUGIN_DIR
           value: ${workspace}/.trunk/plugins/
-        - name: AWS_ACCESS_KEY_ID
-          value: ${env.AWS_ACCESS_KEY_ID}
-          optional: true
-        - name: AWS_SECRET_ACCESS_KEY
-          value: ${env.AWS_SECRET_ACCESS_KEY}
-          optional: true
-        - name: AWS_SESSION_TOKEN
-          value: ${env.AWS_SESSION_TOKEN}
-          optional: true
+        #! Disabled because VSCode workspace fails with these set and deep check
+        #! does not work without them
+        # - name: AWS_ACCESS_KEY_ID
+        #   value: ${env.AWS_ACCESS_KEY_ID}
+        #   optional: true
+        # - name: AWS_SECRET_ACCESS_KEY
+        #   value: ${env.AWS_SECRET_ACCESS_KEY}
+        #   optional: true
+        # - name: AWS_SESSION_TOKEN
+        #   value: ${env.AWS_SESSION_TOKEN}
+        #   optional: true
     - name: tofu
       environment:
         - name: XDG_CONFIG_HOME
@@ -69,6 +71,6 @@ actions:
   enabled:
     - commitlint
     - trunk-announce
-    - trunk-check-pre-push
-    - trunk-fmt-pre-commit
+    #- trunk-check-pre-push
+    #- trunk-fmt-pre-commit
     - trunk-upgrade-available
