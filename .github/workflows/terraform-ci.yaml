@@ -75,11 +75,6 @@ jobs:
         run: terraform validate
         continue-on-error: true
 
-      - name: Terraform validate output
-        id: tfv-out
-        run: |
-          echo ${{ steps.tf-validate.outputs.stdout }}
-
       - name: Add PR comment on failure
         if: ${{ steps.tf-fmt.outputs.exitcode != 0 || steps.tf-validate.outputs.exitcode != 0 }}
         uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
@@ -95,7 +90,7 @@ jobs:
             #### Terraform Validation ${{ steps.tf-validate.outcome }}
 
             ```
-            ${{ steps.tf-validate.outputs.stdout }}
+            ${{ steps.tf-validate.outputs.stderr }}
             ```
 
       - name: Fail deployment on error
