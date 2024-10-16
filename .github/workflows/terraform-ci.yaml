@@ -118,13 +118,6 @@ jobs:
           tflint --config=$GITHUB_WORKSPACE/.trunk/configs/.tflint_ci.hcl --format compact
         continue-on-error: true
 
-      - name: tflint-out
-        id: tlo
-        run: |
-          echo ${{ steps.tflint.outputs.stdout }}
-          echo ${{ steps.tflint.outputs.stderr }}
-          echo ${{ steps.tflint.outputs.exitcode }}
-
       - name: Add PR comment on TFLint failure
         if: ${{ steps.tflint.outputs.exitcode != 0 }}
         uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
@@ -134,7 +127,7 @@ jobs:
             #### TFLint ${{ steps.tflint.outcome }}:
 
             ```
-            ${{ steps.tflint.outputs.stderr }}
+            ${{ steps.tflint.outputs.stdout }}
             ```
 
             Resolve these issues and commit your changes to trigger another deployment.
