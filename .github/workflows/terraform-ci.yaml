@@ -75,7 +75,7 @@ jobs:
         run: terraform validate -no-color
         continue-on-error: true
 
-      - name: Add PR comment on failure
+      - name: Add PR comment on terraform failure
         if: ${{ steps.tf-fmt.outputs.exitcode != 0 || steps.tf-validate.outputs.exitcode != 0 }}
         uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
         with:
@@ -115,14 +115,27 @@ jobs:
       - name: Run TFLint
         id: tflint
         run: |
-          tflint --format compact --config=$GITHUB_WORKSPACE/.trunk/configs/.tflint_ci.hcl
+          tflint --config=$GITHUB_WORKSPACE/.trunk/configs/.tflint_ci.hcl --format sarif > tflint-out.sarif
+        continue-on-error: true
 
-      - name: tflint-out
-        id: tlo
-        run: |
-          echo ${{ steps.tflint.outputs.stdout }}
-          echo ${{ steps.tflint.outputs.stderr }}
-          echo ${{ steps.tflint.outputs.exitcode }}
+      # - name: tflint-out
+      #   id: tlo
+      #   run: |
+      #     echo ${{ steps.tflint.outputs.stdout }}
+      #     echo ${{ steps.tflint.outputs.stderr }}
+      #     echo ${{ steps.tflint.outputs.exitcode }}
+
+      - name: Add PR comment on TFLint failure
+        if: ${{ steps.tflint.outputs.exitcode != 0 }}
+        uses: sett-and-hive/sarif-to-comment-action@v2.0.1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          branch: ${{ github.head_ref }}
+          pr-number: ${{ github.event.number }}
+          sarif-file: ./tflint-out.sarif
+          title: TFLint Error
+          dry-run: false
 
       - name: TFLint error
         if: ${{ steps.tflint.outputs.exitcode != 0 }}
