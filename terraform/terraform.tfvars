@@ -1,4 +1,4 @@
-instance_type     = "hpc7g.16xlarge"
+instance_type     = "t3.micro"
 project_id        = "gitops-2024"
 region            = "us-east-1"
 subnet_cidr_block = "10.0.2.0/24"
