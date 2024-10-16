@@ -138,7 +138,7 @@ jobs:
           repository: ${{ github.repository }}
           branch: ${{ github.head_ref }}
           pr-number: ${{ github.event.number }}
-          sarif-file: $GITHUB_WORKSPACE/tflint-out.sarif
+          sarif-file: ./terraform/tflint-out.sarif
           title: TFLint Error
           dry-run: false
 
