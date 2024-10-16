@@ -28,6 +28,7 @@ jobs:
       checks: write
       contents: read
       id-token: write
+      pull-requests: write
     environment: development
 
     steps:
@@ -62,13 +63,6 @@ jobs:
         run: terraform fmt -check
         continue-on-error: true
 
-      - name: terraform-fmt-out
-        id: tfm-out
-        run: |
-          echo ${{ steps.tf-fmt.outputs.stdout }}
-          echo ${{ steps.tf-fmt.outputs.stderr }}
-          echo ${{ steps.tf-fmt.outputs.exitcode }}
-
       # Initialise terraform in the directory where terraform file have changed.
       - name: Initialise terraform
         run: |
@@ -80,14 +74,32 @@ jobs:
         run: terraform validate -json
         continue-on-error: true
 
-      - name: terraform-validate-out
-        id: tfv-out
-        run: |
-          echo ${{ steps.tf-validate.outputs.stdout }}
-          echo ${{ steps.tf-validate.outputs.stderr }}
-          echo ${{ steps.tf-validate.outputs.exitcode }}
+      - name: Add PR comment on failure
+        if: ${{ steps.tf-fmt.outputs.exitcode != 0 || steps.tf-validate.outputs.exitcode != 0 }}
+        uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
+        with:
+          header: Terraform validation error
+          message: |
+            Details:
+            ```
+            ${{ steps.tf-fmt.outcome }}
+            ${{ steps.tf-validate.outcome }}
+            ${{ steps.tf-fmt.outputs.stdout }}
+            ${{ steps.tf-validate.outputs.stdout }}
+            ```
 
-      # TODO PR comment and fail
+      # - name: Delete PR comment on resolution
+      #   if: ${{ always() && steps.validate-pr-title.outputs.error_message == null }}
+      #   uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
+      #   with:
+      #     header: pr-title-error
+      #     delete: true
+
+      # - name: Summary with valid title
+      #   if: ${{ always() && steps.validate-pr-title.outputs.error_message == null }}
+      #   run: |
+      #     echo "### :white_check_mark: Pull Request title is valid" >> $GITHUB_STEP_SUMMARY
+      #     echo "The pull request title conforms to the conventional commit specification." >> $GITHUB_STEP_SUMMARY
 
       # # Install TFLint; required to download plugins
       # - name: Install TFLint
