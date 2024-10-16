@@ -81,57 +81,51 @@ jobs:
         with:
           header: Terraform validation error
           message: |
-            #### Terraform Format and Style ${{ steps.tf-fmt.outcome }}
+            #### Terraform Format and Style ${{ steps.tf-fmt.outcome }}:
 
-            The following files were formatted:
             ${{ steps.tf-fmt.outputs.stdout }}
 
             #### Terraform Initialization ${{ steps.tf-init.outcome }}
-            #### Terraform Validation ${{ steps.tf-validate.outcome }}
+            #### Terraform Validation ${{ steps.tf-validate.outcome }}:
 
             ```
             ${{ steps.tf-validate.outputs.stderr }}
             ```
 
-      - name: Fail deployment on error
+            Resolve these issues and commit your changes to trigger another deployment.
+
+      - name: Terraform error
         if: ${{ steps.tf-fmt.outputs.exitcode != 0 || steps.tf-validate.outputs.exitcode != 0 }}
         run: |
           exit 1
 
-      # - name: Delete PR comment on resolution
-      #   if: ${{ always() && steps.validate-pr-title.outputs.error_message == null }}
-      #   uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
-      #   with:
-      #     header: pr-title-error
-      #     delete: true
+      # Install TFLint; required to download plugins
+      - name: Install TFLint
+        uses: terraform-linters/setup-tflint@15ef44638cb215296e7ba9e7a41f20b5b06f4784 # v4.0.0
+        with:
+          tflint_version: v0.53.0
 
-      # - name: Summary with valid title
-      #   if: ${{ always() && steps.validate-pr-title.outputs.error_message == null }}
-      #   run: |
-      #     echo "### :white_check_mark: Pull Request title is valid" >> $GITHUB_STEP_SUMMARY
-      #     echo "The pull request title conforms to the conventional commit specification." >> $GITHUB_STEP_SUMMARY
+      # Initialise TFLint using the configuration file for CI in the trunk directory
+      # The CI configuration enables deep check
+      - name: Initialise TFLint
+        run: |
+          tflint --init --config=$GITHUB_WORKSPACE/.trunk/configs/.tflint_ci.hcl
 
-      # # Install TFLint; required to download plugins
-      # - name: Install TFLint
-      #   uses: terraform-linters/setup-tflint@15ef44638cb215296e7ba9e7a41f20b5b06f4784 # v4.0.0
-      #   with:
-      #     tflint_version: v0.53.0
+      - name: Run TFLint
+        id: tflint
+        run: |
+          tflint --format compact
 
-      # # Initialise TFLint using the configuration file for CI in the trunk directory
-      # # The CI configuration enables deep check
-      # - name: Initialise TFLint
-      #   run: |
-      #     tflint --init --config=$GITHUB_WORKSPACE/.trunk/configs/.tflint_ci.hcl
+      - name: TFLint error
+        if: ${{ steps.tflint.outputs.exitcode != 0 }}
+        run: |
+          exit 1
 
-      # - name: Run TFLint
-      #   run: |
-      #     tflint --format compact
-
-      # # Run Trunk Check without terraform and tflint due to deep check issue
-      # - name: Trunk Check
-      #   uses: trunk-io/trunk-action@2eaee169140ec559bd556208f9f99cdfdf468da8 # v1.1.17
-      #   with:
-      #     arguments: --filter checkov,trivy
+      # Run Trunk Check without terraform and tflint due to deep check issue
+      - name: Trunk Check
+        uses: trunk-io/trunk-action@2eaee169140ec559bd556208f9f99cdfdf468da8 # v1.1.17
+        with:
+          arguments: --filter checkov,trivy
 
   # plan-and-apply-dev:
   #   name: Terraform Deploy
