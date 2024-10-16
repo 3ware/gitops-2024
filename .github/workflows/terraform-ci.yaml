@@ -21,13 +21,14 @@ defaults:
     working-directory: ./terraform
 
 jobs:
-  trunk-check-tf:
-    name: Trunk Check Terraform
+  test:
+    name: Test Terraform
     runs-on: ubuntu-latest
     permissions:
       checks: write
       contents: read
       id-token: write
+    environment: development
 
     steps:
       - name: Checkout repository
