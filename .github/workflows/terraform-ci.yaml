@@ -77,7 +77,7 @@ jobs:
       # Run terraform validate
       - name: Terraform validate
         id: tf-validate
-        run: terraform validate
+        run: terraform validate -json
         continue-on-error: true
 
       - name: terraform-validate-out
