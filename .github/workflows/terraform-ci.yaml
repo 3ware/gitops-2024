@@ -192,6 +192,7 @@ jobs:
       - name: Plan
         uses: devsectop/tf-via-pr@cc83c7bae8216e747bb8c074524665b2416822f5 # v11.4.6
         with:
+          arg_chdir: terraform
           arg_command: plan
           arg_lock: false
           arg_var_file: development.tfvars
@@ -204,6 +205,7 @@ jobs:
         # TODO: Run when approved via comment
         uses: devsectop/tf-via-pr@cc83c7bae8216e747bb8c074524665b2416822f5 # v11.4.6
         with:
+          arg_chdir: terraform
           arg_command: apply
           arg_auto_approve: true
           arg_lock: true
@@ -215,6 +217,7 @@ jobs:
         id: idempotency
         uses: devsectop/tf-via-pr@cc83c7bae8216e747bb8c074524665b2416822f5 # v11.4.6
         with:
+          arg_chdir: terraform
           arg_command: plan
           arg_lock: false
           arg_detailed_exitcode: true
@@ -223,9 +226,10 @@ jobs:
           arg_workspace: mtc-gitops-aws-us-east-1-development
 
       - name: Destroy
-        # TODO: Run when approved via comment
+        # TODO: Only run in dev
         uses: devsectop/tf-via-pr@cc83c7bae8216e747bb8c074524665b2416822f5 # v11.4.6
         with:
+          arg_chdir: terraform
           arg_command: apply
           arg_auto_approve: true
           arg_destroy: true
