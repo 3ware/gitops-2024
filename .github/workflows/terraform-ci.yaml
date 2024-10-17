@@ -165,6 +165,7 @@ jobs:
       checks: write # Required to add status summary.
       contents: read # Required to checkout repository.
       id-token: write # Required to authenticate via OIDC.
+      issues: write # Required to create workflow failure issues.
       pull-requests: write # Required to add PR comment and label.
 
     env:
@@ -197,7 +198,6 @@ jobs:
           arg_command: plan
           arg_lock: false
           arg_var_file: development.tfvars
-          # arg_workspace: mtc-gitops-aws-us-east-1-development
 
       # TODO: Add pr comment explaining what to do run trigger apply
       # TODO: Add label tf:plan-approved to PR on approval
@@ -211,7 +211,6 @@ jobs:
           arg_auto_approve: true
           arg_lock: true
           arg_var_file: development.tfvars
-          # arg_workspace: mtc-gitops-aws-us-east-1-development
 
       # This plan should not produce a diff
       - name: Check idempotency
@@ -224,7 +223,43 @@ jobs:
           arg_detailed_exitcode: true
           arg_out: tfplan-check # Give this plan a different name
           arg_var_file: development.tfvars
-          # arg_workspace: mtc-gitops-aws-us-east-1-development
+
+      - name: Create Issue
+        if: ${{ steps.idempotency.outputs.exitcode == 2 }}
+        uses: dacbd/create-issue-action@main
+        with:
+          token: ${{ github.token }}
+          title: Terraform plan diff detected in PR ${{ github.event.pull_request.number }}
+          body: |
+            ${{ github.workflow }} workflow run ${{ github.run_number }} produced a diff when run via #${{ github.event.pull_request.number }}
+
+            stderr
+            ${{ steps.idempotency.outputs.stderr }}
+
+            stdout
+            ${{ steps.idempotency.outputs.stdout }}
+
+            summary
+            ${{ steps.idempotency.outputs.summary }}
+
+            outline
+            ${{ steps.idempotency.outputs.outline }}
+
+            identifier
+            ${{ steps.idempotency.outputs.identifier }}
+
+            last_result
+            ${{ steps.idempotency.outputs.last_result }}
+
+            comment_id
+            ${{ steps.idempotency.outputs.comment_id }}
+
+            check_id
+            ${{ steps.idempotency.outputs.check_id }}
+
+            header
+            ${{ steps.idempotency.outputs.header }}
+          labels: tf:diff
 
       - name: Destroy
         # TODO: Only run in dev
@@ -236,4 +271,8 @@ jobs:
           arg_destroy: true
           arg_lock: true
           arg_var_file: development.tfvars
-          # arg_workspace: mtc-gitops-aws-us-east-1-development
+
+      - name: Diff Error
+        if: ${{ steps.idempotency.outputs.exitcode != 0 }}
+        run: |
+          exit 1
