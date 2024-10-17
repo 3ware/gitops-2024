@@ -237,24 +237,28 @@ jobs:
           # TODO: use jobs.<job-id>.environment when reusable; context not available here
           title: ${{ github.workflow }} detected diff during deployment to **PLACEHOLDER** environment
           body: |
-            ${{ github.workflow }} workflow run [${{ github.run_id }}](https://github.com/3ware/gitops-2024/actions/runs/11378822294)
-            produced a diff when run via #${{ github.event.pull_request.number }}.
+            ${{ github.workflow }} workflow run [${{ github.run_id }}](https://github.com/3ware/gitops-2024/actions/runs/11378822294) produced a diff when run via #${{ github.event.pull_request.number }}.
 
             <details>
             <summary>Outline of changes:</summary>
             <br>
+
             ```
             ${{ steps.idempotency.outputs.outline }}
             ```
+
             </details>
 
             <details>
             <summary>${{ steps.idempotency.outputs.summary }}</summary>
             <br>
+
             ```
             ${{ steps.idempotency.outputs.last_result }}
             ```
+
             </details>
+
           labels: tf:diff
 
       - name: Destroy
