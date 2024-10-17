@@ -197,6 +197,7 @@ jobs:
           arg_chdir: terraform
           arg_command: plan
           arg_lock: false
+          arg_out: tfplan-${{ github.head_ref}}-PR${{ github.event.pull_request.number}}-out
           arg_var_file: development.tfvars
 
       # TODO: Add pr comment explaining what to do run trigger apply
@@ -221,7 +222,7 @@ jobs:
           arg_command: plan
           arg_lock: false
           arg_detailed_exitcode: true
-          arg_out: tfplan-check # Give this plan a different name
+          arg_out: tfplan-${{ github.head_ref}}-PR${{ github.event.pull_request.number}}-check # Give this plan a different name
           arg_var_file: development.tfvars
 
       - name: Create Issue
