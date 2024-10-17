@@ -234,18 +234,27 @@ jobs:
         uses: dacbd/create-issue-action@main
         with:
           token: ${{ github.token }}
-          title: ${{ github.workflow }} diff detected during deployment
+          # TODO: use jobs.<job-id>.environment when reusable; context not available here
+          title: ${{ github.workflow }} detected diff during deployment to **PLACEHOLDER** environment
           body: |
-            ${{ github.workflow }} workflow run [${{ github.run_id }}](https://github.com/3ware/gitops-2024/actions/runs/11378822294 run_id)
-            # TODO: use jobs.<job-id>.environment when reusable; context not available here
-            produced a diff when run via #${{ github.event.pull_request.number }} in the **PLACEHOLDER** environment.
-            ```
-            outline
-            ${{ steps.idempotency.outputs.outline }}
+            ${{ github.workflow }} workflow run [${{ github.run_id }}](https://github.com/3ware/gitops-2024/actions/runs/11378822294)
+            produced a diff when run via #${{ github.event.pull_request.number }}.
 
-            last_result
+            <details>
+            <summary>Outline of changes:</summary>
+            <br>
+            ```
+            ${{ steps.idempotency.outputs.outline }}
+            ```
+            </details>
+
+            <details>
+            <summary>${{ steps.idempotency.outputs.summary }}</summary>
+            <br>
+            ```
             ${{ steps.idempotency.outputs.last_result }}
             ```
+            </details>
           labels: tf:diff
 
       - name: Destroy
