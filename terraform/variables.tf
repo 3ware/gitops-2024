@@ -1,5 +1,5 @@
 locals {
-  valid_instance_types = ["t3.micro"]
+  valid_instance_types = ["t2.micro"]
 }
 
 variable "instance_type" {
