@@ -55,6 +55,7 @@ jobs:
       - name: Setup terraform
         uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
         with:
+          # TODO: Add tfswitch or other to read value from terraform block
           terraform_version: 1.9.7
           terraform_wrapper: true
 
@@ -105,6 +106,7 @@ jobs:
       - name: Install TFLint
         uses: terraform-linters/setup-tflint@15ef44638cb215296e7ba9e7a41f20b5b06f4784 # v4.0.0
         with:
+          # TODO: Read from somewhere or just use latest
           tflint_version: v0.53.0
           tflint_wrapper: true
 
@@ -170,6 +172,7 @@ jobs:
 
     env:
       TF_TOKEN_APP_TERRAFORM_IO: ${{ secrets.TF_TOKEN_APP_TERRAFORM_IO }}
+      #TODO: Construct via inputs and context info in reusable workflow
       TF_WORKSPACE: mtc-gitops-aws-us-east-1-development
 
     environment: development
@@ -188,6 +191,7 @@ jobs:
       - name: Setup terraform
         uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
         with:
+          # TODO: Add tfswitch or other to read value from terraform block
           terraform_version: 1.9.7
           terraform_wrapper: true
 
