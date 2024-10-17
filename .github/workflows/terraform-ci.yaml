@@ -169,6 +169,7 @@ jobs:
 
     env:
       TF_TOKEN_APP_TERRAFORM_IO: ${{ secrets.TF_TOKEN_APP_TERRAFORM_IO }}
+      TF_WORKSPACE: mtc-gitops-aws-us-east-1-development
 
     environment: development
 
@@ -196,7 +197,7 @@ jobs:
           arg_command: plan
           arg_lock: false
           arg_var_file: development.tfvars
-          arg_workspace: mtc-gitops-aws-us-east-1-development
+          # arg_workspace: mtc-gitops-aws-us-east-1-development
 
       # TODO: Add pr comment explaining what to do run trigger apply
       # TODO: Add label tf:plan-approved to PR on approval
@@ -210,7 +211,7 @@ jobs:
           arg_auto_approve: true
           arg_lock: true
           arg_var_file: development.tfvars
-          arg_workspace: mtc-gitops-aws-us-east-1-development
+          # arg_workspace: mtc-gitops-aws-us-east-1-development
 
       # This plan should not produce a diff
       - name: Check idempotency
@@ -223,7 +224,7 @@ jobs:
           arg_detailed_exitcode: true
           arg_out: tfplan-check # Give this plan a different name
           arg_var_file: development.tfvars
-          arg_workspace: mtc-gitops-aws-us-east-1-development
+          # arg_workspace: mtc-gitops-aws-us-east-1-development
 
       - name: Destroy
         # TODO: Only run in dev
@@ -235,4 +236,4 @@ jobs:
           arg_destroy: true
           arg_lock: true
           arg_var_file: development.tfvars
-          arg_workspace: mtc-gitops-aws-us-east-1-development
+          # arg_workspace: mtc-gitops-aws-us-east-1-development
