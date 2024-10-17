@@ -158,7 +158,7 @@ jobs:
             #### Terraform Validation ${{ steps.tf-validate.outcome }} :white_check_mark:
             #### TFLint ${{ steps.tf-validate.outcome }} :white_check_mark:
 
-  plan-and-apply-dev:
+  plan-and-apply:
     name: Terraform Deploy
     needs: [test-terraform]
     runs-on: ubuntu-latest
@@ -234,36 +234,18 @@ jobs:
         uses: dacbd/create-issue-action@main
         with:
           token: ${{ github.token }}
-          title: Terraform plan diff detected in PR ${{ github.event.pull_request.number }}
+          title: ${{ github.workflow }} diff detected during deployment
           body: |
-            ${{ github.workflow }} workflow run ${{ github.run_number }} produced a diff when run via #${{ github.event.pull_request.number }}
-
-            stderr
-            ${{ steps.idempotency.outputs.stderr }}
-
-            stdout
-            ${{ steps.idempotency.outputs.stdout }}
-
-            summary
-            ${{ steps.idempotency.outputs.summary }}
-
+            ${{ github.workflow }} workflow run [${{ github.run_id }}](https://github.com/3ware/gitops-2024/actions/runs/11378822294 run_id)
+            # TODO: use jobs.<job-id>.environment when reusable; context not available here
+            produced a diff when run via #${{ github.event.pull_request.number }} in the **PLACEHOLDER** environment.
+            ```
             outline
             ${{ steps.idempotency.outputs.outline }}
 
-            identifier
-            ${{ steps.idempotency.outputs.identifier }}
-
             last_result
             ${{ steps.idempotency.outputs.last_result }}
-
-            comment_id
-            ${{ steps.idempotency.outputs.comment_id }}
-
-            check_id
-            ${{ steps.idempotency.outputs.check_id }}
-
-            header
-            ${{ steps.idempotency.outputs.header }}
+            ```
           labels: tf:diff
 
       - name: Destroy
