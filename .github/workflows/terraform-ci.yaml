@@ -181,6 +181,7 @@ jobs:
   # TODO: How to trigger? PR review, PR comment, deployment status?
   plan-and-apply-prod:
     name: Terraform Deploy Production
+    needs: [plan-and-apply-dev]
     permissions:
       actions: read # Required to download repository artifact.
       checks: write # Required to add status summary.
