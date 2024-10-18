@@ -159,7 +159,7 @@ jobs:
             #### TFLint ${{ steps.tf-validate.outcome }} :white_check_mark:
 
   plan-and-apply-dev:
-    name: Terraform Deploy Development
+    name: Terraform Deploy
     needs: [test-terraform]
     permissions:
       actions: read # Required to download repository artifact.
@@ -180,7 +180,7 @@ jobs:
 
   # TODO: How to trigger? PR review, PR comment, deployment status?
   plan-and-apply-prod:
-    name: Terraform Deploy Production
+    name: Terraform Deploy
     needs: [plan-and-apply-dev]
     permissions:
       actions: read # Required to download repository artifact.
