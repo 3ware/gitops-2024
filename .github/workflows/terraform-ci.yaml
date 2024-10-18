@@ -3,11 +3,11 @@ name: Terraform CI
 on:
   pull_request:
     branches: [main]
+    types: [opened, edited, synchronize]
     paths:
       - "**/*.tf"
       - "**/*.tfvars"
       - "**/*.tftpl"
-  #TODO: Trigger to run apply on comment
 
 # Disable permissions for all available scopes.
 permissions: {}
@@ -158,10 +158,9 @@ jobs:
             #### Terraform Validation ${{ steps.tf-validate.outcome }} :white_check_mark:
             #### TFLint ${{ steps.tf-validate.outcome }} :white_check_mark:
 
-  plan-and-apply:
-    name: Terraform Deploy
+  plan-and-apply-dev:
+    name: Terraform Deploy Development
     needs: [test-terraform]
-    runs-on: ubuntu-latest
     permissions:
       actions: read # Required to download repository artifact.
       checks: write # Required to add status summary.
@@ -169,110 +168,30 @@ jobs:
       id-token: write # Required to authenticate via OIDC.
       issues: write # Required to create workflow failure issues.
       pull-requests: write # Required to add PR comment and label.
+    uses: 3ware/workflows/.github/workflows/terraform-ci.yaml@feat-terraform-ci
+    with:
+      environment: development
+      auto-approve-apply: true
+      test-destroy: true
+      region: us-east-1
+    secrets:
+      provider-credentials: ${{ secrets.AWS_DEV_OIDC_ROLE_ARN }}
+      backend-credentials: ${{ secrets.TF_TOKEN_APP_TERRAFORM_IO }}
 
-    env:
-      TF_TOKEN_APP_TERRAFORM_IO: ${{ secrets.TF_TOKEN_APP_TERRAFORM_IO }}
-      #TODO: Construct via inputs and context info in reusable workflow
-      TF_WORKSPACE: mtc-gitops-aws-us-east-1-development
-
-    environment: development
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
-
-      - name: Configure AWS credentials via OIDC
-        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # v4.0.2
-        with:
-          aws-region: us-east-1
-          role-to-assume: ${{ secrets.AWS_DEV_OIDC_ROLE_ARN }}
-          role-session-name: gitops-2024-terraform-deploy
-
-      - name: Setup terraform
-        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
-        with:
-          # TODO: Add tfswitch or other to read value from terraform block
-          terraform_version: 1.9.7
-          terraform_wrapper: true
-
-      - name: Plan
-        uses: devsectop/tf-via-pr@cc83c7bae8216e747bb8c074524665b2416822f5 # v11.4.6
-        with:
-          arg_chdir: terraform
-          arg_command: plan
-          arg_lock: false
-          arg_out: tfplan-${{ github.head_ref}}-PR${{ github.event.pull_request.number}}-out
-          arg_var_file: development.tfvars
-
-      # TODO: Add pr comment explaining what to do run trigger apply
-      # TODO: Add label tf:plan-approved to PR on approval
-
-      - name: Apply
-        # TODO: Run when approved via comment
-        uses: devsectop/tf-via-pr@cc83c7bae8216e747bb8c074524665b2416822f5 # v11.4.6
-        with:
-          arg_chdir: terraform
-          arg_command: apply
-          arg_auto_approve: true
-          arg_lock: true
-          arg_var_file: development.tfvars
-
-      # This plan should not produce a diff
-      - name: Check idempotency
-        id: idempotency
-        uses: devsectop/tf-via-pr@cc83c7bae8216e747bb8c074524665b2416822f5 # v11.4.6
-        with:
-          arg_chdir: terraform
-          arg_command: plan
-          arg_lock: false
-          arg_detailed_exitcode: true
-          arg_out: tfplan-${{ github.head_ref}}-PR${{ github.event.pull_request.number}}-check # Give this plan a different name
-          arg_var_file: development.tfvars
-
-      - name: Create Issue
-        if: ${{ steps.idempotency.outputs.exitcode == 2 }}
-        uses: dacbd/create-issue-action@main
-        with:
-          token: ${{ github.token }}
-          # TODO: use jobs.<job-id>.environment when reusable; context not available here
-          title: ${{ github.workflow }} detected diff during deployment to **PLACEHOLDER** environment
-          body: |
-            ${{ github.workflow }} workflow run [${{ github.run_id }}](https://github.com/3ware/gitops-2024/actions/runs/11378822294) produced a diff when run via pull request #${{ github.event.pull_request.number }}.
-
-            <details>
-            <summary>Outline of changes:</summary>
-            <br>
-
-            ```
-            ${{ steps.idempotency.outputs.outline }}
-            ```
-
-            </details>
-
-            <details>
-            <summary>${{ steps.idempotency.outputs.summary }}</summary>
-            <br>
-
-            ```
-            ${{ steps.idempotency.outputs.last_result }}
-            ```
-
-            </details>
-
-          labels: tf:diff
-
-      - name: Destroy
-        # TODO: Only run in dev
-        uses: devsectop/tf-via-pr@cc83c7bae8216e747bb8c074524665b2416822f5 # v11.4.6
-        with:
-          arg_chdir: terraform
-          arg_command: apply
-          arg_auto_approve: true
-          arg_destroy: true
-          arg_lock: true
-          arg_var_file: development.tfvars
-
-      - name: Diff Error
-        if: ${{ steps.idempotency.outputs.exitcode != 0 }}
-        run: |
-          exit 1
+  # plan-and-apply-prod:
+  #   name: Terraform Deploy Production
+  #   permissions:
+  #     actions: read # Required to download repository artifact.
+  #     checks: write # Required to add status summary.
+  #     contents: read # Required to checkout repository.
+  #     id-token: write # Required to authenticate via OIDC.
+  #     issues: write # Required to create workflow failure issues.
+  #     pull-requests: write # Required to add PR comment and label.
+  #   uses: 3ware/workflows/.github/workflows/terraform-ci.yaml@feat-terraform-ci
+  #   with:
+  #     environment: production
+  #     auto-approve-apply: false
+  #     test-destroy: false
+  #   secrets:
+  #     provider-credentials: ${{ secrets.AWS_PRD_OIDC_ROLE_ARN }}
+  #     backend-credentials: ${{ secrets.TF_TOKEN_APP_TERRAFORM_IO }}
