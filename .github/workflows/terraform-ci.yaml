@@ -192,8 +192,8 @@ jobs:
     uses: 3ware/workflows/.github/workflows/terraform-ci.yaml@feat-terraform-ci
     with:
       environment: production
-      auto-approve-apply: false
-      test-destroy: false
+      #auto-approve-apply: false
+      #test-destroy: false
       region: us-east-1
     secrets:
       provider-credentials: ${{ secrets.AWS_PRD_OIDC_ROLE_ARN }}
