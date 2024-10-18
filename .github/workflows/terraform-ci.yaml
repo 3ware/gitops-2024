@@ -178,20 +178,22 @@ jobs:
       provider-credentials: ${{ secrets.AWS_DEV_OIDC_ROLE_ARN }}
       backend-credentials: ${{ secrets.TF_TOKEN_APP_TERRAFORM_IO }}
 
-  # plan-and-apply-prod:
-  #   name: Terraform Deploy Production
-  #   permissions:
-  #     actions: read # Required to download repository artifact.
-  #     checks: write # Required to add status summary.
-  #     contents: read # Required to checkout repository.
-  #     id-token: write # Required to authenticate via OIDC.
-  #     issues: write # Required to create workflow failure issues.
-  #     pull-requests: write # Required to add PR comment and label.
-  #   uses: 3ware/workflows/.github/workflows/terraform-ci.yaml@feat-terraform-ci
-  #   with:
-  #     environment: production
-  #     auto-approve-apply: false
-  #     test-destroy: false
-  #   secrets:
-  #     provider-credentials: ${{ secrets.AWS_PRD_OIDC_ROLE_ARN }}
-  #     backend-credentials: ${{ secrets.TF_TOKEN_APP_TERRAFORM_IO }}
+  # TODO: How to trigger? PR review, PR comment, deployment status?
+  plan-and-apply-prod:
+    name: Terraform Deploy Production
+    permissions:
+      actions: read # Required to download repository artifact.
+      checks: write # Required to add status summary.
+      contents: read # Required to checkout repository.
+      id-token: write # Required to authenticate via OIDC.
+      issues: write # Required to create workflow failure issues.
+      pull-requests: write # Required to add PR comment and label.
+    uses: 3ware/workflows/.github/workflows/terraform-ci.yaml@feat-terraform-ci
+    with:
+      environment: production
+      auto-approve-apply: false
+      test-destroy: false
+      region: us-east-1
+    secrets:
+      provider-credentials: ${{ secrets.AWS_PRD_OIDC_ROLE_ARN }}
+      backend-credentials: ${{ secrets.TF_TOKEN_APP_TERRAFORM_IO }}
