@@ -10,23 +10,78 @@ The main purpose of this mini camp is to build a GitOps pipeline to deploy resou
 - [Workflow](#workflow)
   - [Branching Strategy](#branching-strategy)
   - [Diagram](#diagram)
-  - [Infracost](#infracost)
   - [Terraform](#terraform)
 
 ## Requirements
+
+| **Section**             | **Task**                                  | **Self-Reported Status** | **Notes**                                                                                    |
+| ----------------------- | ----------------------------------------- | ------------------------ | -------------------------------------------------------------------------------------------- |
+| **Setup**               |                                           |                          |                                                                                              |
+|                         | Main branch is protected                  | :white_check_mark:       |                                                                                              |
+|                         | Cannot merge to main with failed checks   | :white_check_mark:       |                                                                                              |
+|                         | State is stored remotely                  | :white_check_mark:       |                                                                                              |
+|                         | State Locking mechanism is enabled        | :white_check_mark:       |                                                                                              |
+| **Design and Code**     |                                           |                          |                                                                                              |
+|                         | Confirm Account Number                    | :white_check_mark:       | data source post condition                                                                   |
+|                         | Confirm Region                            | :white_check_mark:       | variable validation                                                                          |
+|                         | Add Default Tags                          | :white_check_mark:       | added to provider block                                                                      |
+|                         | Avoid Hardcoded Values                    | :white_check_mark:       |                                                                                              |
+|                         | No plaintext credentials                  | :white_check_mark:       | Environment variables set by OIDC                                                            |
+|                         | Pipeline in GitHub Actions only           | :white_check_mark:       |                                                                                              |
+| **Validate**            |                                           |                          |                                                                                              |
+|                         | terraform fmt pre-commit hook             | :white_check_mark:       | Git Hooks managed by [trunk-io](https://docs.trunk.io/cli/getting-started/actions/git-hooks) |
+|                         | pre-commit hooks are in repo              | :white_check_mark:       |                                                                                              |
+| **Test and Review**     |                                           |                          |                                                                                              |
+|                         | Pipeline works on every PR                | :white_check_mark:       | `on: pull_request trigger`                                                                   |
+|                         | Linter                                    | :white_check_mark:       | TFLint configured with aws plugin and deep check                                             |
+|                         | terraform fmt                             | :white_check_mark:       | https://github.com/3ware/gitops-2024/pull/5                                                  |
+|                         | terraform validate                        | :white_check_mark:       | https://github.com/3ware/gitops-2024/pull/5                                                  |
+|                         | terraform plan                            | :white_check_mark:       | https://github.com/3ware/gitops-2024/pull/5                                                  |
+|                         | Infracost with comment                    | :white_check_mark:       | https://github.com/3ware/gitops-2024/pull/4                                                  |
+|                         | Open Policy Agent fail if cost > $10      | :white_check_mark:       | https://github.com/3ware/gitops-2024/pull/6                                                  |
+| **Deploy**              |                                           |                          |                                                                                              |
+|                         | terraform apply with human intervention   |                          |                                                                                              |
+|                         | Deploy to production environment          |                          |                                                                                              |
+| **Operate and Monitor** |                                           |                          |                                                                                              |
+|                         | Scheduled drift detection                 |                          |                                                                                              |
+|                         | Scheduled port accessibility check        |                          |                                                                                              |
+| **Readme**              |                                           |                          |                                                                                              |
+|                         | Organized Structure                       |                          |                                                                                              |
+|                         | Explains all workflows                    |                          |                                                                                              |
+|                         | Link to docs for each action              |                          |                                                                                              |
+|                         | Contribution Instructions                 |                          |                                                                                              |
+|                         | Explains merging strategy                 |                          |                                                                                              |
+| **Bonus**               |                                           |                          |                                                                                              |
+|                         | Deploy to multiple environments           |                          |                                                                                              |
+|                         | Ignore non-terraform changes              | :white_check_mark:       | Workflow trigger use paths filter for tf and tfvars files.                                   |
+|                         | Comment PR with useful plan information   | :white_check_mark:       | https://github.com/3ware/gitops-2024/pull/7                                                  |
+|                         | Comment PR with useful Linter information | :white_check_mark:       | https://github.com/3ware/gitops-2024/pull/5                                                  |
+|                         | Open an Issue if Drifted                  |                          |                                                                                              |
+|                         | Open an issue if port is inaccessible     |                          |                                                                                              |
+|                         | Comment on PR to apply                    |                          |                                                                                              |
 
 ## Workflow
 
 ### Branching Strategy
 
+Create feature branch
+Commit and push changes
+Create a draft pull request - annoying that this cannot be set as the default.
+
 TBC. Currently, feature branch of main.
 
-<!-- ```mermaid
-title: Branching Strategy
+```mermaid
+---
+config:
+  theme: base
+---
 gitGraph
-commit
+  commit
+  commit
+  branch feature
+  commit
+  commit
 ```
--->
 
 ### Diagram
 
@@ -44,13 +99,8 @@ flowchart LR
   end
   subgraph Pass
     direction LR
-    P("`**Pass Required Checks**
-    PR Can be merged`")
-  end
-  subgraph Infracost
-    direction LR
-    ic{"`**Infracost**
-    Fail if > $10`"}
+    P("`**Met Required Checks**
+    Merge PR & Apply to Prod`")
   end
   subgraph Test
     direction LR
@@ -62,25 +112,25 @@ flowchart LR
     validate{"`**Validate**
     terraform fmt
     terraform validate
-    tflint`"} -->|Fail|F
+    tflint
+    Infracost fail if > $10`"} -->|Fail|F
   end
-  subgraph Deploy [Deploy Development Environment]
-    plan(terraform plan) -->
-    approve{Approve plan} -->|Yes|Y(terraform apply)-->test
-    approve -->|No|F
+  subgraph Development [Deploy Development Environment]
+    direction LR
+    dapply(terraform apply -auto-approve)-->test
     test("`Test Deployment
-    terraform plan -detailed-exitcode`") -->E{Exit code} -->|0 - Succeeded|P
-    E -->|1 - Errored|I(Issue)
-    E -->|2 - Diff|I(Issue)
+    terraform plan -detailed-exitcode`") -->E{Exit code} -->|2 - Diff|I(Issue)
     I -->F
   end
-  PR --> ic
+  subgraph Production [Deploy Production Environment]
+    direction LR
+    pplan(terraform plan) -->approve{Approve plan}
+  end
   PR --> Test
-  validate -->|Pass|plan
-  ic -->|Over Budget|F
-  ic -->|Within Budget|P
+  validate -->|Pass|dapply
+  E{Exit code} -->|0 - Succeeded|pplan
+  approve{Approve plan} -->|No|F
+  approve{Approve plan} -->|Yes|P
 ```
-
-### Infracost
 
 ### Terraform
