@@ -21,7 +21,7 @@ concurrency:
 defaults:
   run:
     shell: bash
-    working-directory: ./terraform
+    working-directory: ./terraform/development
 
 jobs:
   test-terraform:
