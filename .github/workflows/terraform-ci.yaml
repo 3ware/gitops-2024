@@ -8,8 +8,8 @@ on:
       - "**/*.tf"
       - "**/*.tfvars"
       - "**/*.tftpl"
-  merge_group:
-    types: [checks_requested]
+  pull_request_review:
+    types: [submitted]
 
 # Disable permissions for all available scopes.
 permissions: {}
@@ -161,44 +161,74 @@ jobs:
             #### Terraform Validation ${{ steps.tf-validate.outcome }} :white_check_mark:
             #### TFLint ${{ steps.tf-validate.outcome }} :white_check_mark:
 
-  plan-and-apply-dev:
-    if: ${{ github.event_name == 'pull_request' }}
+  plan-and-apply:
     name: Terraform Deploy
+    runs-on: ubuntu-latest
     needs: [test-terraform]
     permissions:
       actions: read # Required to download repository artifact.
       checks: write # Required to add status summary.
       contents: read # Required to checkout repository.
       id-token: write # Required to authenticate via OIDC.
-      issues: write # Required to create workflow failure issues.
       pull-requests: write # Required to add PR comment and label.
-    uses: 3ware/workflows/.github/workflows/terraform-ci.yaml@feat-terraform-ci
-    with:
-      environment: development
-      auto-approve-apply: true
-      test-destroy: true
-      region: us-east-1
-    secrets:
-      provider-credentials: ${{ secrets.AWS_DEV_OIDC_ROLE_ARN }}
-      backend-credentials: ${{ secrets.TF_TOKEN_APP_TERRAFORM_IO }}
+    environment: development
 
-  # # TODO: How to trigger? PR review, PR comment, deployment status?
-  # plan-and-apply-prod:
-  #   name: Terraform Deploy
-  #   needs: [plan-and-apply-dev]
-  #   permissions:
-  #     actions: read # Required to download repository artifact.
-  #     checks: write # Required to add status summary.
-  #     contents: read # Required to checkout repository.
-  #     id-token: write # Required to authenticate via OIDC.
-  #     issues: write # Required to create workflow failure issues.
-  #     pull-requests: write # Required to add PR comment and label.
-  #   uses: 3ware/workflows/.github/workflows/terraform-ci.yaml@feat-terraform-ci
-  #   with:
-  #     environment: production
-  #     #auto-approve-apply: false
-  #     #test-destroy: false
-  #     region: us-east-1
-  #   secrets:
-  #     provider-credentials: ${{ secrets.AWS_PRD_OIDC_ROLE_ARN }}
-  #     backend-credentials: ${{ secrets.TF_TOKEN_APP_TERRAFORM_IO }}
+    steps:
+      - name: Set environment variables
+        # Replace '/' with '-' Most things like dashes and do not like forward slashes
+        run: |
+          echo "REPOSITORY=$(echo ${{ github.repository }} | tr / -)" >> "$GITHUB_ENV"
+
+      - name: Checkout repository
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # v4.0.2
+        with:
+          aws-region: us-east-1
+          role-to-assume: ${{ secrets.AWS_DEV_OIDC_ROLE_ARN }}
+          # $REPOSITORY, as described in the github docs, does not work
+          role-session-name: "${{ env.REPOSITORY }}-development-terraform-deploy"
+
+      - name: Setup terraform
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+        with:
+          # TODO: Add tfswitch or other to read value from terraform block
+          terraform_version: 1.9.7
+          terraform_wrapper: true
+
+      - name: Terraform
+        uses: devsectop/tf-via-pr@cc83c7bae8216e747bb8c074524665b2416822f5 # v11.4.6
+        with:
+          arg_chdir: terraform/development
+          arg_command: ${{ github.event.review.state == 'approved' && 'apply' || 'plan' }}
+          arg_lock: ${{ github.event.review.state == 'approved' && 'true' || 'false' }}
+          plan_parity: ${{ github.event.review.state == 'approved' && 'true' || 'false' }}
+
+      # This plan should not produce a diff
+      - name: Check idempotency
+        id: idempotency
+        uses: devsectop/tf-via-pr@cc83c7bae8216e747bb8c074524665b2416822f5 # v11.4.6
+        with:
+          arg_chdir: terraform/development
+          arg_command: plan
+          arg_lock: false
+          arg_detailed_exitcode: true
+          arg_out: tfplan-${{ github.head_ref}}-PR${{ github.event.pull_request.number}}-check # Give this plan a different name
+
+      - name: Add PR comment terraform diff
+        if: ${{ steps.idempotency.outputs.exitcode != 0 }}
+        uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
+        with:
+          header: Diff Error
+          message: |
+            ####  ${{ github.workflow }} detected diff during deployment to the development environment
+
+            See ${{ steps.idempotency.outputs.comment_id }} for details. Please resolve the error and commit your changes to re-run the workflow.
+
+            ${{ github.workflow }} workflow run: [${{ github.run_id }}](https://github.com/3ware/gitops-2024/actions/runs/${{ github.run_id }})
+
+      - name: Diff Error
+        if: ${{ steps.idempotency.outputs.exitcode != 0 }}
+        run: |
+          exit 1
