@@ -209,6 +209,7 @@ jobs:
 
       # This plan should not produce a diff
       - name: Check idempotency
+        if: ${{ github.event.review.state == 'approved' }}
         id: idempotency
         uses: devsectop/tf-via-pr@cc83c7bae8216e747bb8c074524665b2416822f5 # v11.4.6
         with:
@@ -226,7 +227,7 @@ jobs:
           message: |
             ####  ${{ github.workflow }} detected diff during deployment to the development environment
 
-            See ${{ steps.idempotency.outputs.comment_id }} for details. Please resolve the error and commit your changes to re-run the workflow.
+            Please resolve the error and commit your changes to re-run the workflow.
 
             ${{ github.workflow }} workflow run: [${{ github.run_id }}](https://github.com/3ware/gitops-2024/actions/runs/${{ github.run_id }})
 
