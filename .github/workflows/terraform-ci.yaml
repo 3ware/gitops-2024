@@ -172,6 +172,8 @@ jobs:
       id-token: write # Required to authenticate via OIDC.
       pull-requests: write # Required to add PR comment and label.
     environment: development
+    env:
+      TF_TOKEN_APP_TERRAFORM_IO: ${{ secrets.TF_TOKEN_APP_TERRAFORM_IO }}
 
     steps:
       # - name: Set environment variables
