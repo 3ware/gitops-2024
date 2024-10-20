@@ -174,10 +174,10 @@ jobs:
     environment: development
 
     steps:
-      - name: Set environment variables
-        # Replace '/' with '-' Most things like dashes and do not like forward slashes
-        run: |
-          echo "REPOSITORY=$(echo ${{ github.repository }} | tr / -)" >> "$GITHUB_ENV"
+      # - name: Set environment variables
+      #   # Replace '/' with '-' Most things like dashes and do not like forward slashes
+      #   run: |
+      #     echo "REPOSITORY=$(echo ${{ github.repository }} | tr / -)" >> "$GITHUB_ENV"
 
       - name: Checkout repository
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
@@ -188,7 +188,7 @@ jobs:
           aws-region: us-east-1
           role-to-assume: ${{ secrets.AWS_DEV_OIDC_ROLE_ARN }}
           # $REPOSITORY, as described in the github docs, does not work
-          role-session-name: "${{ env.REPOSITORY }}-development-terraform-deploy"
+          role-session-name: "gitops2024-development-terraform-deploy"
 
       - name: Setup terraform
         uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
