@@ -189,7 +189,7 @@ This workflow also flags any policy violations defined in [infracost-policy.rego
 ##### Validate
 
 - Setup AWS credentials using [config-aws-credentials](https://github.com/aws-actions/configure-aws-credentials) using OIDC to assume a role and set the authentication parameters as environment variables on the runner. This step is required when TFLint [deep checking](https://github.com/terraform-linters/tflint-ruleset-aws/blob/master/docs/deep_checking.md) for the AWS rule plugin is enabled.
-- Setup terraform using [setup-terraform](https://github.com/hashicorp/setup-terraform)
+- ~~Setup terraform using [setup-terraform](https://github.com/hashicorp/setup-terraform)~~ Not required. terraform v1.9.7 already installed on runner image.
 
 > [!NOTE]
 > This may not be required because terraform 1.9.7 is installed on the [runner image](https://github.com/actions/runner-images/blob/ubuntu22/20241015.1/images/ubuntu/Ubuntu2204-Readme.md)

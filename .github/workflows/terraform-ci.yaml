@@ -57,14 +57,6 @@ jobs:
           path: .trunk/plugins/
           key: ${{ runner.os }}-${{ github.repository }}-tflint-${{ hashFiles('.trunk/configs/.tflint_ci.hcl') }}
 
-      # Install terraform; required to initialise working directory
-      # TODO: Does this need installing; already installed on runner
-      - name: Setup terraform
-        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
-        with:
-          terraform_version: 1.9.7
-          terraform_wrapper: true
-
       # Run terraform format
       - name: Terraform fmt
         id: tf-fmt
@@ -199,13 +191,6 @@ jobs:
           role-to-assume: ${{ secrets.AWS_DEV_OIDC_ROLE_ARN }}
           # $REPOSITORY, as described in the github docs, does not work
           role-session-name: gitops2024-development-terraform-deploy
-
-      - name: Setup terraform
-        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
-        with:
-          # TODO: Add tfswitch or other to read value from terraform block
-          terraform_version: 1.9.7
-          terraform_wrapper: true
 
       - name: Terraform
         uses: devsectop/tf-via-pr@cc83c7bae8216e747bb8c074524665b2416822f5 # v11.4.6
