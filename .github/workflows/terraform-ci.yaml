@@ -158,9 +158,7 @@ jobs:
   plan-and-apply:
     name: Terraform Deploy
     runs-on: ubuntu-latest
-    # Job is skipped when the pull request is approved, because test does not run
-    # TODO: Can this job run: on pr if test succeeds or on pr approve if test is skipped?
-    # needs: [test-terraform]
+    needs: [test-terraform]
     # if: |
     #  always() &&
     #  github.event_name == 'pull_request' && needs.test-terraform.result == 'success' ||
