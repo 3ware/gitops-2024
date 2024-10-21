@@ -21,6 +21,7 @@ concurrency:
 defaults:
   run:
     shell: bash
+    #TODO: Move this to job level if using matrix
     working-directory: ./terraform/development
 
 jobs:
@@ -33,6 +34,7 @@ jobs:
       contents: read
       id-token: write
       pull-requests: write
+    #TODO: Use matrix for different environments
     environment: development
 
     steps:
@@ -45,6 +47,7 @@ jobs:
         with:
           aws-region: us-east-1
           mask-aws-account-id: true
+          #TODO: Secrets will need renaming if using matrix for environments. eg AWS_${{ matrix.environment }}_OIDC_ROLE_ARN
           role-to-assume: ${{ secrets.AWS_DEV_OIDC_ROLE_ARN }}
           role-session-name: tflint-deep-check
 
@@ -55,10 +58,10 @@ jobs:
           key: ${{ runner.os }}-${{ github.repository }}-tflint-${{ hashFiles('.trunk/configs/.tflint_ci.hcl') }}
 
       # Install terraform; required to initialise working directory
+      # TODO: Does this need installing; already installed on runner
       - name: Setup terraform
         uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
         with:
-          # TODO: Add tfswitch or other to read value from terraform block
           terraform_version: 1.9.7
           terraform_wrapper: true
 
@@ -109,7 +112,6 @@ jobs:
       - name: Install TFLint
         uses: terraform-linters/setup-tflint@15ef44638cb215296e7ba9e7a41f20b5b06f4784 # v4.0.0
         with:
-          # TODO: Read from somewhere or just use latest
           tflint_version: v0.53.0
           tflint_wrapper: true
 
@@ -167,6 +169,10 @@ jobs:
     # Job is skipped when the pull request is approved, because test does not run
     # TODO: Can this job run: on pr if test succeeds or on pr approve if test is skipped?
     # needs: [test-terraform]
+    # if: |
+    #  always() &&
+    #  github.event_name == 'pull_request' && needs.test-terraform.result == 'success' ||
+    #  github.event_name ==  github.event.review.state == 'approved' && needs.test-terraform.result == 'skipped'
     permissions:
       actions: read # Required to download repository artifact.
       checks: write # Required to add status summary.
