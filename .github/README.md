@@ -10,10 +10,18 @@ The main purpose of this mini camp is to build a GitOps pipeline to deploy resou
   - [Table of contents](#table-of-contents)
   - [Requirements](#requirements)
   - [Workflow](#workflow)
+    - [When to apply?](#when-to-apply)
+    - [Directories vs Workspaces for multiple environments](#directories-vs-workspaces-for-multiple-environments)
     - [Branching Strategy](#branching-strategy)
     - [Diagram](#diagram)
     - [Workflows](#workflows)
       - [Infracost](#infracost)
+      - [Terraform CI](#terraform-ci)
+        - [Validate](#validate)
+        - [Plan](#plan)
+        - [Apply](#apply)
+        - [Diff Check](#diff-check)
+  - [To do list](#to-do-list)
 
 ## Requirements
 
@@ -47,17 +55,17 @@ The main purpose of this mini camp is to build a GitOps pipeline to deploy resou
 |                         | Infracost with comment                    |    :white_check_mark:    | https://github.com/3ware/gitops-2024/pull/4                |
 |                         | Open Policy Agent fail if cost > $10      |    :white_check_mark:    | https://github.com/3ware/gitops-2024/pull/6                |
 | **Deploy**              |                                           |                          |                                                            |
-|                         | terraform apply with human intervention   |                          |                                                            |
-|                         | Deploy to production environment          |                          |                                                            |
+|                         | terraform apply with human intervention   |    :white_check_mark:    |                                                            |
+|                         | Deploy to production environment          |                          | Currently deploying to _development_ environment           |
 | **Operate and Monitor** |                                           |                          |                                                            |
 |                         | Scheduled drift detection                 |                          |                                                            |
 |                         | Scheduled port accessibility check        |                          |                                                            |
 | **Readme**              |                                           |                          |                                                            |
-|                         | Organized Structure                       |                          |                                                            |
-|                         | Explains all workflows                    |                          |                                                            |
-|                         | Link to docs for each action              |                          |                                                            |
+|                         | Organized Structure                       |    :white_check_mark:    |                                                            |
+|                         | Explains all workflows                    |    :white_check_mark:    |                                                            |
+|                         | Link to docs for each action              |    :white_check_mark:    |                                                            |
 |                         | Contribution Instructions                 |                          |                                                            |
-|                         | Explains merging strategy                 |                          |                                                            |
+|                         | Explains merging strategy                 |    :white_check_mark:    |                                                            |
 | **Bonus**               |                                           |                          |                                                            |
 |                         | Deploy to multiple environments           |                          |                                                            |
 |                         | Ignore non-terraform changes              |    :white_check_mark:    | Workflow trigger use paths filter for tf and tfvars files. |
@@ -65,7 +73,7 @@ The main purpose of this mini camp is to build a GitOps pipeline to deploy resou
 |                         | Comment PR with useful Linter information |    :white_check_mark:    | https://github.com/3ware/gitops-2024/pull/5                |
 |                         | Open an Issue if Drifted                  |                          |                                                            |
 |                         | Open an issue if port is inaccessible     |                          |                                                            |
-|                         | Comment on PR to apply                    |                          |                                                            |
+|                         | Comment on PR to apply                    |    :white_check_mark:    | PR is approved to apply                                    |
 
 </details>
 
@@ -77,11 +85,23 @@ The main purpose of this mini camp is to build a GitOps pipeline to deploy resou
 
 > [!IMPORTANT]
 > Pull Request must be set to draft to prevent CODEOWNER reviewers being assigned until the pull request is ready.
-> This cannot be set by default. See [open discussion](https://github.com/orgs/community/discussions/6943)
+> This cannot be set by default. See [open discussion](https://github.com/orgs/community/discussions/6943).
 > Unfortunately this also cannot be automated because action runners, using `GITHUB_TOKEN` for authentication, are unable to run `gh pr ready --undo` as the integration is unavailable. See [open discussion](https://github.com/cli/cli/issues/8910)
 
 - When the [Workflows](#workflows) have completed, mark the PR as ready to assign a reviewer from CODEOWNERS. (again cannot be automated on a runner)
-- If the PR is approved, merge the pull request. The branch will be automatically deleted.
+- If the PR is approved, the workflow will run again to apply the changed.
+
+### When to apply?
+
+The [debate rumbles on](https://terramate.io/rethinking-iac/mastering-terraform-workflows-apply-before-merge-vs-apply-after-merge/). In this case, because it's just me, apply before merge is fine.
+
+### Directories vs Workspaces for multiple environments
+
+Another debate. The best argument I have heard for directories was in the Q&A session on 19/10/2024:
+
+> _"anyone should be able to `cd` into a terraform working directory and simply run `terraform plan` without have to worry about workspaces and variable files"_
+
+The workflow currently runs in the _development_ directory, with a view to having a _production_ directory should time allow.
 
 ### Branching Strategy
 
@@ -119,7 +139,7 @@ flowchart LR
   subgraph Pass
     direction LR
     P("`**Met Required Checks**
-    Merge PR & Apply to Prod`")
+    Merge PR`")
   end
   subgraph Test
     direction LR
@@ -136,20 +156,16 @@ flowchart LR
   end
   subgraph Development [Deploy Development Environment]
     direction LR
-    dapply(terraform apply -auto-approve)-->test
-    test("`Test Deployment
-    terraform plan -detailed-exitcode`") -->E{Exit code} -->|2 - Diff|I(Issue)
-    I -->F
+    devplan(terraform plan)-->AP{"`**Approve Plan**
+    via PR approval`"} -->|No|F
+    AP -->|Yes|devapply(terraform apply) -->testdev("`**Diff Check**
+    terraform plan -detailed-exitcode`") -->E{Exit code} -->|2 - Diff|PRC(PR Comment)
   end
-  subgraph Production [Deploy Production Environment]
-    direction LR
-    pplan(terraform plan) -->approve{Approve plan}
-  end
-  PR --> Test
-  validate -->|Pass|dapply
-  E{Exit code} -->|0 - Succeeded|pplan
-  approve{Approve plan} -->|No|F
-  approve{Approve plan} -->|Yes|P
+  PR(Draft Pull Request) --> Test
+  validate -->|Pass|devplan
+  E{Exit code} -->|0 - Succeeded|P
+  PRC -->F
+  F -->|Make changes and resubmit|Test
 ```
 
 ### Workflows
@@ -160,4 +176,44 @@ flowchart LR
 
 This workflow also flags any policy violations defined in [infracost-policy.rego](../infracost/infracost-policy.rego). See an example in this [pull_request](https://github.com/3ware/gitops-2024/pull/6)
 
-#### Terraform CI
+#### Terraform CI
+
+##### Validate
+
+- Setup AWS credentials using [config-aws-credentials](https://github.com/aws-actions/configure-aws-credentials) using OIDC to assume a role and set the authentication parameters as environment variables on the runner. This step is required when TFLint [deep checking](https://github.com/terraform-linters/tflint-ruleset-aws/blob/master/docs/deep_checking.md) for the AWS rule plugin is enabled.
+- Setup terraform using [setup-terraform](https://github.com/hashicorp/setup-terraform)
+
+> [!NOTE]
+> This may not be required because terraform 1.9.7 is installed on the [runner image](https://github.com/actions/runner-images/blob/ubuntu22/20241015.1/images/ubuntu/Ubuntu2204-Readme.md)
+
+- Run `terraform fmt`
+- Run `terraform init`
+- Run `terraform validate`
+- Install TFLint using [setup-tflint](https://github.com/terraform-linters/setup-tflint)
+- Initialise TFLint to download the AWS plugin rules
+- Run `tflint`
+- Update the PR comments if any of the steps fails and exit the workflow on failure
+
+##### Plan
+
+When a draft pull request is opened, and the Test Terraform job has succeeded - a ` terraform plan` will be run.
+The workflow uses [TF-via-PR](https://github.com/DevSecTop/TF-via-PR). This action adds a high level plan and detailed drop down style plan to the workflow summary and updates the pull request with a comment.
+
+##### Apply
+
+After `terraform plan` has been run, assuming the plan is satisfactory, mark the pull request ready for review. Assuming the pull request is approved, the workflow will run again - this time running `terraform apply`, with `plan_parity` set, to ensure the plan has not changed.
+
+##### Diff Check
+
+Following a successful apply, another plan is run to check for any diffs. If a diff is detected a pull request comment is added and the workflow exits with a failure. If a diff is not detected, the pull request can be merged.
+
+## To do list
+
+- [ ] Terraform Docs
+- [ ] Drift check
+- [ ] Grafana Port Check
+- [ ] Test without setup terraform action because it's already installed on the runner
+- [ ] Test plan parity and drift detection
+- [ ] Pull request labels for : approval-required, approved, environment
+- [ ] Job matrix for multiple environments
+- [ ] Conditional execution, if possible and not too complicated, or the plan-and-apply job
