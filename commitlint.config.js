@@ -19,6 +19,7 @@ module.exports = {
         "repo",
         "terraform",
         "terraform-ci",
+        "terraform-docs",
         "trunk",
       ],
     ],

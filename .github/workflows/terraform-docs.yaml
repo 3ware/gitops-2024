@@ -1,0 +1,22 @@
+name: OpenTofu CI
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+    paths:
+      - "**/*.tf"
+      - "**/*.tfvars"
+      - "**/*.tftpl"
+
+# Disable permissions for all available scopes
+permissions: {}
+
+jobs:
+  terraform-docs:
+    if: ${{ github.event.pull_request.merged == true }}
+    name: Terraform Docs
+    uses: 3ware/workflows/.github/workflows/terraform-docs.yaml@7880d6b986d1d689f5d219e901b863f1378fea9c # v4.4.0
+    secrets: inherit
+    with:
+      tf-directory: terraform/development
