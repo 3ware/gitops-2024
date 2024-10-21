@@ -172,6 +172,7 @@ jobs:
     environment: development
     env:
       TF_TOKEN_APP_TERRAFORM_IO: ${{ secrets.TF_TOKEN_APP_TERRAFORM_IO }}
+      APPLY_TRIGGER: ${{ github.event.issue.pull_request && contains(github.event.comment.body, 'terraform plan approved') }}
 
     steps:
       # - name: Set environment variables
@@ -194,13 +195,13 @@ jobs:
         uses: devsectop/tf-via-pr@cc83c7bae8216e747bb8c074524665b2416822f5 # v11.4.6
         with:
           arg_chdir: terraform/development
-          arg_command: ${{ github.event.review.state == 'approved' && 'apply' || 'plan' }}
-          arg_lock: ${{ github.event.review.state == 'approved' && 'true' || 'false' }}
-          plan_parity: ${{ github.event.review.state == 'approved' && 'true' || 'false' }}
+          arg_command: ${{ env.APPLY_TRIGGER && 'apply' || 'plan' }}
+          arg_lock: ${{ env.APPLY_TRIGGER && 'true' || 'false' }}
+          plan_parity: ${{ env.APPLY_TRIGGER && 'true' || 'false' }}
 
       # This plan should not produce a diff
       - name: Check idempotency
-        if: ${{ github.event.review.state == 'approved' }}
+        if: ${{ env.APPLY_TRIGGER }}
         id: idempotency
         uses: devsectop/tf-via-pr@cc83c7bae8216e747bb8c074524665b2416822f5 # v11.4.6
         with:
