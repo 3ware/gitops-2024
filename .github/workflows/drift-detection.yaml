@@ -1,0 +1,45 @@
+name: Drift Detection
+
+on:
+  # schedule:
+  #   - cron: "* 1 * * *"
+  workflow_dispatch: {}
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.repository }}
+  cancel-in-progress: true
+
+jobs:
+  drift-detection:
+    name: Drift Detection
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read # Required to download repository artifact.
+      checks: write # Required to add status summary.
+      contents: read # Required to checkout repository.
+      id-token: write # Required to authenticate via OIDC.
+      pull-requests: write # Required to add PR comment and label.
+    environment: development
+    env:
+      TF_TOKEN_APP_TERRAFORM_IO: ${{ secrets.TF_TOKEN_APP_TERRAFORM_IO }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # v4.0.2
+        with:
+          aws-region: us-east-1
+          role-to-assume: ${{ secrets.AWS_DEV_OIDC_ROLE_ARN }}
+          role-session-name: gitops2024-development-terraform-deploy
+
+      - name: Terraform Plan
+        uses: devsectop/tf-via-pr@01cbb55e2c19fee32e9783108c3aafb2baeaedff # v12.0.0-rc-1
+        with:
+          working-directory: terraform/development
+          command: plan
+          hide-args: true
+          plan-encrypt: ${{ secrets.PGP_SECRET_SIGNING_PASSPHRASE }}

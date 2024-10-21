@@ -13,6 +13,7 @@ module.exports = {
       [
         "checks",
         "commitlint",
+        "drift",
         "infracost",
         "pr-check",
         "renbot",

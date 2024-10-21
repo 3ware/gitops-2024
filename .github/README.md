@@ -63,7 +63,7 @@ The main purpose of this mini camp is to build a GitOps pipeline to deploy resou
 |                         | Infracost with comment                    |    :white_check_mark:    | See PR https://github.com/3ware/gitops-2024/pull/4         |
 |                         | Open Policy Agent fail if cost > $10      |    :white_check_mark:    | See PR https://github.com/3ware/gitops-2024/pull/6         |
 | **Deploy**              |                                           |                          |                                                            |
-|                         | terraform apply with human intervention   |    :white_check_mark:    |                                                            |
+|                         | terraform apply with human intervention   |    :white_check_mark:    | Applied when PR is approved                                |
 |                         | Deploy to production environment          |                          | Currently deploying to _development_ environment           |
 | **Operate and Monitor** |                                           |                          |                                                            |
 |                         | Scheduled drift detection                 |                          |                                                            |
