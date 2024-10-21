@@ -3,7 +3,7 @@ run-name: ${{ github.event.workflow_run.display_title }}
 
 on:
   workflow_run:
-    workflows: [OpenTofu CI]
+    workflows: [Terraform Docs]
     types: [completed]
     branches: [main]
 

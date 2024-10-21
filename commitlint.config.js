@@ -16,6 +16,7 @@ module.exports = {
         "infracost",
         "pr-check",
         "renbot",
+        "release",
         "repo",
         "terraform",
         "terraform-ci",
