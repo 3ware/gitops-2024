@@ -1,4 +1,4 @@
-name: OpenTofu CI
+name: Terraform Docs
 
 on:
   pull_request:
