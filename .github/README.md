@@ -21,6 +21,8 @@ The main purpose of this mini camp is to build a GitOps pipeline to deploy resou
         - [Plan](#plan)
         - [Apply](#apply)
         - [Diff Check](#diff-check)
+      - [Terraform Docs](#terraform-docs)
+      - [Release](#release)
   - [To do list](#to-do-list)
 
 ## Requirements
@@ -49,11 +51,11 @@ The main purpose of this mini camp is to build a GitOps pipeline to deploy resou
 | **Test and Review**     |                                           |                          |                                                            |
 |                         | Pipeline works on every PR                |    :white_check_mark:    | `on: pull_request trigger`                                 |
 |                         | Linter                                    |    :white_check_mark:    | TFLint configured with aws plugin and deep check           |
-|                         | terraform fmt                             |    :white_check_mark:    | https://github.com/3ware/gitops-2024/pull/5                |
-|                         | terraform validate                        |    :white_check_mark:    | https://github.com/3ware/gitops-2024/pull/5                |
-|                         | terraform plan                            |    :white_check_mark:    | https://github.com/3ware/gitops-2024/pull/5                |
-|                         | Infracost with comment                    |    :white_check_mark:    | https://github.com/3ware/gitops-2024/pull/4                |
-|                         | Open Policy Agent fail if cost > $10      |    :white_check_mark:    | https://github.com/3ware/gitops-2024/pull/6                |
+|                         | terraform fmt                             |    :white_check_mark:    | See PR https://github.com/3ware/gitops-2024/pull/5         |
+|                         | terraform validate                        |    :white_check_mark:    | See PR https://github.com/3ware/gitops-2024/pull/5         |
+|                         | terraform plan                            |    :white_check_mark:    | See PR https://github.com/3ware/gitops-2024/pull/5         |
+|                         | Infracost with comment                    |    :white_check_mark:    | See PR https://github.com/3ware/gitops-2024/pull/4         |
+|                         | Open Policy Agent fail if cost > $10      |    :white_check_mark:    | See PR https://github.com/3ware/gitops-2024/pull/6         |
 | **Deploy**              |                                           |                          |                                                            |
 |                         | terraform apply with human intervention   |    :white_check_mark:    |                                                            |
 |                         | Deploy to production environment          |                          | Currently deploying to _development_ environment           |
@@ -69,8 +71,8 @@ The main purpose of this mini camp is to build a GitOps pipeline to deploy resou
 | **Bonus**               |                                           |                          |                                                            |
 |                         | Deploy to multiple environments           |                          |                                                            |
 |                         | Ignore non-terraform changes              |    :white_check_mark:    | Workflow trigger use paths filter for tf and tfvars files. |
-|                         | Comment PR with useful plan information   |    :white_check_mark:    | https://github.com/3ware/gitops-2024/pull/7                |
-|                         | Comment PR with useful Linter information |    :white_check_mark:    | https://github.com/3ware/gitops-2024/pull/5                |
+|                         | Comment PR with useful plan information   |    :white_check_mark:    | See PR https://github.com/3ware/gitops-2024/pull/7         |
+|                         | Comment PR with useful Linter information |    :white_check_mark:    | See PR https://github.com/3ware/gitops-2024/pull/5         |
 |                         | Open an Issue if Drifted                  |                          |                                                            |
 |                         | Open an issue if port is inaccessible     |                          |                                                            |
 |                         | Comment on PR to apply                    |    :white_check_mark:    | PR is approved to apply                                    |
@@ -192,6 +194,7 @@ This workflow also flags any policy violations defined in [infracost-policy.rego
 - Install TFLint using [setup-tflint](https://github.com/terraform-linters/setup-tflint)
 - Initialise TFLint to download the AWS plugin rules
 - Run `tflint`
+- Run [trunk code quality action](https://github.com/marketplace/actions/trunk-check); this runs checkov and trivy security checks
 - Update the PR comments if any of the steps fails and exit the workflow on failure
 
 ##### Plan
@@ -207,9 +210,18 @@ After `terraform plan` has been run, assuming the plan is satisfactory, mark the
 
 Following a successful apply, another plan is run to check for any diffs. If a diff is detected a pull request comment is added and the workflow exits with a failure. If a diff is not detected, the pull request can be merged.
 
+#### Terraform Docs
+
+[Terraform docs](https://github.com/terraform-docs/gh-actions) will run when the pull request is merged. This only needs to run once, following the apply, and not on every commit to a pull request. Updating the README on every commit generates a lot unnecessary commits and you have to pull the updated README prior to the next push to avoid conflicts.
+
+I use my own [Terraform Docs reusable workflow](https://github.com/3ware/workflows/blob/main/.github/workflows/terraform-docs.yaml) which adds job summaries and verified commits.
+
+#### Release
+
+Generate a CHANGELOG and version tag using [semantic release](https://github.com/cycjimmy/semantic-release-action)
+
 ## To do list
 
-- [ ] Terraform Docs
 - [ ] Drift check
 - [ ] Grafana Port Check
 - [ ] Test without setup terraform action because it's already installed on the runner
