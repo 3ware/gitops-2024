@@ -1,8 +1,8 @@
 name: Drift Detection
 
 on:
-  # schedule:
-  #   - cron: "* 1 * * *"
+  schedule:
+    - cron: 0 7 * * *
   workflow_dispatch: {}
 
 permissions: {}
@@ -38,63 +38,13 @@ jobs:
           role-session-name: gitops2024-development-terraform-deploy
 
       - name: Terraform Plan
-<<<<<<< HEAD
         uses: devsectop/tf-via-pr@01cbb55e2c19fee32e9783108c3aafb2baeaedff # v12.0.0-rc-1
-||||||| parent of ef7825b (ci(drift): Check error code)
         id: drift-plan
-        uses: devsectop/tf-via-pr@cc83c7bae8216e747bb8c074524665b2416822f5 # v11.4.6
-=======
-        id: drift-plan
-        uses: devsectop/tf-via-pr@01cbb55e2c19fee32e9783108c3aafb2baeaedff # v12.0.0-rc1
->>>>>>> ef7825b (ci(drift): Check error code)
         with:
           working-directory: terraform/development
           command: plan
-<<<<<<< HEAD
           hide-args: true
           plan-encrypt: ${{ secrets.PGP_SECRET_SIGNING_PASSPHRASE }}
-||||||| parent of ef7825b (ci(drift): Check error code)
-          arg_chdir: terraform/development
-          arg_command: plan
-          arg_lock: false
-          arg_detailed_exitcode: true
-
-      - name: Create Drift Issue
-        if: ${{ steps.drift-plan.outputs.exitcode == 2 }}
-        uses: dacbd/create-issue-action@cdb57ab6ff8862aa09fee2be6ba77a59581921c2 # v2.0.0
-        with:
-          token: ${{ github.token }}
-          title: ${{ github.workflow }}
-          body: |
-            ${{ github.workflow }} workflow run [${{ github.run_id }}](https://github.com/3ware/gitops-2024/actions/runs/${{ github.run_id }}) detected a diff.
-
-            <details>
-            <summary>Outline of changes:</summary>
-            <br>
-
-            ```
-            ${{ steps.drift-plan.outputs.outline }}
-            ```
-
-            </details>
-
-            <details>
-            <summary>${{ steps.drift-plan.outputs.summary }}</summary>
-            <br>
-
-            ```
-            ${{ steps.drift-plan.outputs.last_result }}
-            ```
-
-            </details>
-
-          labels: tf:diff
-=======
-          arg-lock: false
-
-      - name: echo exit code
-        run: |
-          echo exit code is: ${{ steps.drift-plan.outputs.exitcode }}
 
       - name: Create Drift Issue
         if: ${{ steps.drift-plan.outputs.exitcode == 2 }}
@@ -110,4 +60,3 @@ jobs:
             Add plan highlights to issue when available as outputs from upstream action
 
           labels: tf:diff
->>>>>>> ef7825b (ci(drift): Check error code)
