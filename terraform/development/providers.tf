@@ -15,19 +15,19 @@ locals {
   }
 }
 
-# data "aws_caller_identity" "current" {
-#   lifecycle {
-#     postcondition {
-#       condition = contains(values(local.valid_account_no), self.id)
-#       error_message = format(
-#         "Invalid AWS account ID specified. Received: '%s', Require: '%s'.\n%s",
-#         self.id,
-#         join(", ", values(local.valid_account_no)),
-#         "Configure AWS credentials to assume the correct role."
-#       )
-#     }
-#   }
-# }
+data "aws_caller_identity" "current" {
+  lifecycle {
+    postcondition {
+      condition = contains(values(local.valid_account_no), self.id)
+      error_message = format(
+        "Invalid AWS account ID specified. Received: '%s', Require: '%s'.\n%s",
+        self.id,
+        join(", ", values(local.valid_account_no)),
+        "Configure AWS credentials to assume the correct role."
+      )
+    }
+  }
+}
 
 locals {
   # Defines a list of permitted environment tag values. Used by the postcondition in the aws_default_tags data source
