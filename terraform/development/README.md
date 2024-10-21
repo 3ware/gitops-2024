@@ -1,4 +1,4 @@
-# More Than Certified GitOps 2024 minicamp Terraform documentation
+# More Than Certified GitOps 2024 Minicamp Terraform documentation
 
 <!-- BEGIN_TF_DOCS -->
 
