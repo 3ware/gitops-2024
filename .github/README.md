@@ -66,7 +66,7 @@ The main purpose of this mini camp is to build a GitOps pipeline to deploy resou
 |                         | terraform apply with human intervention   |    :white_check_mark:    | Applied when PR is approved                                |
 |                         | Deploy to production environment          |                          | Currently deploying to _development_ environment           |
 | **Operate and Monitor** |                                           |                          |                                                            |
-|                         | Scheduled drift detection                 |                          |                                                            |
+|                         | Scheduled drift detection                 |    :white_check_mark:    |                                                            |
 |                         | Scheduled port accessibility check        |                          |                                                            |
 | **Readme**              |                                           |                          |                                                            |
 |                         | Organized Structure                       |    :white_check_mark:    |                                                            |
@@ -79,7 +79,7 @@ The main purpose of this mini camp is to build a GitOps pipeline to deploy resou
 |                         | Ignore non-terraform changes              |    :white_check_mark:    | Workflow trigger use paths filter for tf and tfvars files. |
 |                         | Comment PR with useful plan information   |    :white_check_mark:    | See PR https://github.com/3ware/gitops-2024/pull/7         |
 |                         | Comment PR with useful Linter information |    :white_check_mark:    | See PR https://github.com/3ware/gitops-2024/pull/5         |
-|                         | Open an Issue if Drifted                  |                          |                                                            |
+|                         | Open an Issue if Drifted                  |    :white_check_mark:    | See Issue https://github.com/3ware/gitops-2024/issues/20   |
 |                         | Open an issue if port is inaccessible     |                          |                                                            |
 |                         | Comment on PR to apply                    |    :white_check_mark:    | PR is approved to apply                                    |
 
@@ -235,7 +235,6 @@ Generate a CHANGELOG and version tag using [semantic release](https://github.com
 
 ## To do list
 
-- [ ] Drift check
 - [ ] Grafana Port Check
 - [ ] Test plan parity and drift detection
 - [ ] Pull request labels for : approval-required, approved, environment
