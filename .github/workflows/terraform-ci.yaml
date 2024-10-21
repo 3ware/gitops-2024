@@ -199,6 +199,21 @@ jobs:
           arg_lock: ${{ env.APPLY_TRIGGER && 'true' || 'false' }}
           plan_parity: ${{ env.APPLY_TRIGGER && 'true' || 'false' }}
 
+      - name: Assign approval label
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          gh pr edit ${{ github.event.pull_request.number }} --add-label "approval required"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Assign approved label
+        run: >
+          ${{ env.APPLY_TRIGGER }} &&
+          gh pr edit ${{ github.event.pull_request.number }} --add-label "approved" --remove-label "approval required" ||
+          gh pr edit ${{ github.event.pull_request.number }} --add-label "approval rejected" --remove-label "approval required" }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       # This plan should not produce a diff
       - name: Check idempotency
         if: ${{ env.APPLY_TRIGGER }}
