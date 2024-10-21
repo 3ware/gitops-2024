@@ -50,71 +50,71 @@ resource "aws_route_table_association" "gitops_rta" {
   route_table_id = aws_route_table.gitops_rt.id
 }
 
-resource "aws_security_group" "grafana_sg" {
-  name        = "grafana_sg"
-  description = "Grafana Server security group"
-  vpc_id      = aws_vpc.gitops_vpc.id
-}
+# resource "aws_security_group" "grafana_sg" {
+#   name        = "grafana_sg"
+#   description = "Grafana Server security group"
+#   vpc_id      = aws_vpc.gitops_vpc.id
+# }
 
-resource "aws_vpc_security_group_ingress_rule" "grafana_ingress" {
-  description       = "Inbound traffic to grafana web interface"
-  security_group_id = aws_security_group.grafana_sg.id
-  cidr_ipv4         = "0.0.0.0/0"
-  from_port         = 3000
-  ip_protocol       = "tcp"
-  to_port           = 3000
+# resource "aws_vpc_security_group_ingress_rule" "grafana_ingress" {
+#   description       = "Inbound traffic to grafana web interface"
+#   security_group_id = aws_security_group.grafana_sg.id
+#   cidr_ipv4         = "0.0.0.0/0"
+#   from_port         = 3000
+#   ip_protocol       = "tcp"
+#   to_port           = 3000
 
-  tags = {
-    Name = "grafana-ingress-sg-rule-${local.environment}"
-  }
+#   tags = {
+#     Name = "grafana-ingress-sg-rule-${local.environment}"
+#   }
 
-  lifecycle {
-    create_before_destroy = true
-  }
-}
+#   lifecycle {
+#     create_before_destroy = true
+#   }
+# }
 
-# trunk-ignore(trivy/AVD-AWS-0104): Unrestricted egress traffic permitted for demo purposes
-resource "aws_vpc_security_group_egress_rule" "grafana_egress" {
-  description       = "Outbound traffic from grafana server"
-  security_group_id = aws_security_group.grafana_sg.id
-  cidr_ipv4         = "0.0.0.0/0"
-  ip_protocol       = "-1"
+# # trunk-ignore(trivy/AVD-AWS-0104): Unrestricted egress traffic permitted for demo purposes
+# resource "aws_vpc_security_group_egress_rule" "grafana_egress" {
+#   description       = "Outbound traffic from grafana server"
+#   security_group_id = aws_security_group.grafana_sg.id
+#   cidr_ipv4         = "0.0.0.0/0"
+#   ip_protocol       = "-1"
 
-  tags = {
-    Name = "grafana-egress-sg-rule-${local.environment}"
-  }
+#   tags = {
+#     Name = "grafana-egress-sg-rule-${local.environment}"
+#   }
 
-  lifecycle {
-    create_before_destroy = true
-  }
-}
+#   lifecycle {
+#     create_before_destroy = true
+#   }
+# }
 
-data "aws_ami" "ubuntu" {
-  most_recent = true
+# data "aws_ami" "ubuntu" {
+#   most_recent = true
 
-  filter {
-    name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
-  }
+#   filter {
+#     name   = "name"
+#     values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
+#   }
 
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
+#   filter {
+#     name   = "virtualization-type"
+#     values = ["hvm"]
+#   }
 
-  owners = ["099720109477"] # Canonical
-}
+#   owners = ["099720109477"] # Canonical
+# }
 
-# trunk-ignore(trivy/AVD-AWS-0028): IMDS token not required for demo
-# trunk-ignore(trivy/AVD-AWS-0131): EBS encryption not required for demo
-resource "aws_instance" "grafana_server" {
-  ami                    = data.aws_ami.ubuntu.id
-  instance_type          = var.instance_type
-  subnet_id              = aws_subnet.gitops_subnet.id
-  vpc_security_group_ids = [aws_security_group.grafana_sg.id]
-  user_data              = file("userdata.tftpl")
+# # trunk-ignore(trivy/AVD-AWS-0028): IMDS token not required for demo
+# # trunk-ignore(trivy/AVD-AWS-0131): EBS encryption not required for demo
+# resource "aws_instance" "grafana_server" {
+#   ami                    = data.aws_ami.ubuntu.id
+#   instance_type          = var.instance_type
+#   subnet_id              = aws_subnet.gitops_subnet.id
+#   vpc_security_group_ids = [aws_security_group.grafana_sg.id]
+#   user_data              = file("userdata.tftpl")
 
-  tags = {
-    Name = "grafana-server-${local.environment}"
-  }
-}
+#   tags = {
+#     Name = "grafana-server-${local.environment}"
+#   }
+# }

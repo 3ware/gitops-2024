@@ -189,7 +189,7 @@ This workflow also flags any policy violations defined in [infracost-policy.rego
 ##### Validate
 
 - Setup AWS credentials using [config-aws-credentials](https://github.com/aws-actions/configure-aws-credentials) using OIDC to assume a role and set the authentication parameters as environment variables on the runner. This step is required when TFLint [deep checking](https://github.com/terraform-linters/tflint-ruleset-aws/blob/master/docs/deep_checking.md) for the AWS rule plugin is enabled.
-- Setup terraform using [setup-terraform](https://github.com/hashicorp/setup-terraform)
+- ~~Setup terraform using [setup-terraform](https://github.com/hashicorp/setup-terraform)~~ Not required. terraform v1.9.7 already installed on runner image.
 
 > [!NOTE]
 > This may not be required because terraform 1.9.7 is installed on the [runner image](https://github.com/actions/runner-images/blob/ubuntu22/20241015.1/images/ubuntu/Ubuntu2204-Readme.md)
@@ -208,9 +208,16 @@ This workflow also flags any policy violations defined in [infracost-policy.rego
 When a draft pull request is opened, and the Test Terraform job has succeeded - a ` terraform plan` will be run.
 The workflow uses [TF-via-PR](https://github.com/DevSecTop/TF-via-PR). This action adds a high level plan and detailed drop down style plan to the workflow summary and updates the pull request with a comment.
 
+> [!NOTE]
+> Plan will run on `pull_request` events when the test job is successful.
+
 ##### Apply
 
 After `terraform plan` has been run, assuming the plan is satisfactory, mark the pull request ready for review. Assuming the pull request is approved, the workflow will run again - this time running `terraform apply`, with `plan_parity` set, to ensure the plan has not changed.
+
+> [!NOTE]
+> Apply will run on `pull_request_review` events when the PR is approved and the test workflow is skipped.
+> The test workflow is skipped because it only runs on `pull_request` events. This has been tested in PR https://github.com/3ware/gitops-2024/pull/19
 
 ##### Diff Check
 
@@ -230,8 +237,6 @@ Generate a CHANGELOG and version tag using [semantic release](https://github.com
 
 - [ ] Drift check
 - [ ] Grafana Port Check
-- [ ] Test without setup terraform action because it's already installed on the runner
 - [ ] Test plan parity and drift detection
 - [ ] Pull request labels for : approval-required, approved, environment
-- [ ] Job matrix for multiple environments
-- [ ] Conditional execution, if possible and not too complicated, or the plan-and-apply job
+- [ ] Job matrix / branched for multiple environments
