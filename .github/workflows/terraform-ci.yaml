@@ -75,6 +75,7 @@ jobs:
         run: terraform validate -no-color
         continue-on-error: true
 
+      # Add PR comment with formatting and validation errors
       - name: Add PR comment on terraform failure
         if: ${{ steps.tf-fmt.outputs.exitcode != 0 || steps.tf-validate.outputs.exitcode != 0 }}
         uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
@@ -95,6 +96,7 @@ jobs:
 
             Resolve these issues and commit your changes to trigger another deployment.
 
+      # Exit this workflow if fmt or validate fail
       - name: Terraform error
         if: ${{ steps.tf-fmt.outputs.exitcode != 0 || steps.tf-validate.outputs.exitcode != 0 }}
         run: |
@@ -119,6 +121,7 @@ jobs:
           tflint --config=$GITHUB_WORKSPACE/.trunk/configs/.tflint_ci.hcl --format compact
         continue-on-error: true
 
+      # Add PR comment when TFLint detects a violation
       - name: Add PR comment on TFLint failure
         if: ${{ steps.tflint.outputs.exitcode != 0 }}
         uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
@@ -135,6 +138,7 @@ jobs:
 
             Resolve these issues and commit your changes to trigger another deployment.
 
+      # Exit workflow if TFLint detects a violation
       - name: TFLint error
         if: ${{ steps.tflint.outputs.exitcode != 0 }}
         run: |
@@ -159,6 +163,9 @@ jobs:
     name: Terraform Deploy
     runs-on: ubuntu-latest
     needs: [test-terraform]
+    # This job should run `terraform plan` following the successful completion of test-terraform
+    # `terraform apply` is triggered when an approval comment is added to the pull request. A pr comment event does not trigger
+    # the test workflow, so `terraform apply` should run when test-terraform is skipped
     if: |
       always() &&
       github.event_name == 'pull_request' && needs.test-terraform.result == 'success' ||
@@ -172,6 +179,8 @@ jobs:
     environment: development
     env:
       TF_TOKEN_APP_TERRAFORM_IO: ${{ secrets.TF_TOKEN_APP_TERRAFORM_IO }}
+      # Conditions that should evaluated to tru to run terraform apply
+      # Used in `if` conditions to trigger certain steps below or change arguments
       APPLY_TRIGGER: ${{ github.event.issue.pull_request && contains(github.event.comment.body, 'terraform plan approved') }}
 
     steps:
@@ -193,8 +202,10 @@ jobs:
 
       - name: Terraform
         uses: devsectop/tf-via-pr@f1acaae1d94826457fa57bc65f1df318fd81b3bc # v12.0.0
+        id: terraform
         with:
           working-directory: terraform/development
+          # If the APPLY_TRIGGER is true, run 'apply'; if not, run 'plan'
           command: ${{ env.APPLY_TRIGGER && 'apply' || 'plan' }}
           arg-lock: ${{ env.APPLY_TRIGGER && 'true' || 'false' }}
           plan-parity: ${{ env.APPLY_TRIGGER && 'true' || 'false' }}
@@ -208,19 +219,16 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Add PR comment to request plan approval
+      - name: Update PR comment to request plan approval
         if: ${{ github.event_name == 'pull_request' }}
         uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
         with:
-          header: approve-plan
-          hide_and_recreate: true
-          hide_classify: RESOLVED
+          header: ${{ steps.terraform.outputs.comment-id }}
+          append: true
           message: |
-            #### Plan Approval required.
+            #### Terraform Plan Approval required.
 
             Add a comment with: **terraform plan approved** to approve.
-
-            Reject the plan with: **terraform plan rejected**
 
       #TODO: What to do when the plan is rejected
 
