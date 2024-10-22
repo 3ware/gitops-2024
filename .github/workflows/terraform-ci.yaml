@@ -265,6 +265,7 @@ jobs:
           arg-lock: false
           hide-args: true
           plan-encrypt: ${{ secrets.PGP_SECRET_SIGNING_PASSPHRASE }}
+          comment-pr: none
 
       - name: Update status comment
         if: ${{ steps.idempotency.outputs.exitcode == 2 }}
@@ -278,7 +279,22 @@ jobs:
 
             Please resolve the error and commit your changes to re-run the workflow.
 
-            [View run log.](https://github.com/3ware/gitops-2024/actions/runs/${{ github.run_id }})
+            <details><summary>Diff of changes.</summary>
+
+            ```diff
+            ${{ steps.idempotency.outputs.diff }}
+            ```
+            </details>
+
+            <details><summary>${{ steps.idempotency.outputs.summary }}</summary>
+
+            ```hcl
+            ${{ steps.idempotency.outputs.result }}
+            ```
+
+            </details>
+
+            [View run log.](${{ steps.idempotency.outputs.run-url }})
 
       - name: Remove labels
         if: ${{ steps.idempotency.outputs.exitcode == 2 }}
