@@ -24,7 +24,7 @@ defaults:
 
 jobs:
   test-terraform:
-    if: ${{ !contains(github.event.pull_request.labels.*.name , 'approved') }}
+    if: ${{ !(contains(github.event.pull_request.labels.*.name , 'approved')) }}
     name: Test Terraform
     runs-on: ubuntu-latest
     permissions:
@@ -157,121 +157,121 @@ jobs:
             #### Terraform Validation ${{ steps.tf-validate.outcome }} :white_check_mark:
             #### TFLint ${{ steps.tf-validate.outcome }} :white_check_mark:
 
-  plan-and-apply:
-    name: Terraform Deploy
-    runs-on: ubuntu-latest
-    needs: [test-terraform]
-    # This job should run `terraform plan` following the successful completion of test-terraform
-    # `terraform apply` is triggered when the 'approved' label is added to the pull request. A pr comment event does not trigger
-    # the test workflow, so `terraform apply` should run when test-terraform is skipped
-    if: |
-      always() &&
-      github.event_name == 'pull_request' && needs.test-terraform.result == 'success' ||
-      contains(github.event.pull_request.labels.name, 'approved') && needs.test-terraform.result == 'skipped'
-    permissions:
-      actions: read # Required to download repository artifact.
-      checks: write # Required to add status summary.
-      contents: read # Required to checkout repository.
-      id-token: write # Required to authenticate via OIDC.
-      pull-requests: write # Required to add PR comment and label.
-    environment: development
-    env:
-      TF_TOKEN_APP_TERRAFORM_IO: ${{ secrets.TF_TOKEN_APP_TERRAFORM_IO }}
-      # Run plan steps if the pull request does not have the 'approved' label
-      PLAN_TRIGGER: ${{ !(contains(github.event.pull_request.labels.*.name , 'approved')) }}
-      # Run apply steps if the pull request does not have the 'approved' label
-      APPLY_TRIGGER: ${{ contains(github.event.pull_request.labels.*.name , 'approved') }}
+  # plan-and-apply:
+  #   name: Terraform Deploy
+  #   runs-on: ubuntu-latest
+  #   needs: [test-terraform]
+  #   # This job should run `terraform plan` following the successful completion of test-terraform
+  #   # `terraform apply` is triggered when the 'approved' label is added to the pull request. A pr comment event does not trigger
+  #   # the test workflow, so `terraform apply` should run when test-terraform is skipped
+  #   if: |
+  #     always() &&
+  #     github.event_name == 'pull_request' && needs.test-terraform.result == 'success' ||
+  #     contains(github.event.pull_request.labels.name, 'approved') && needs.test-terraform.result == 'skipped'
+  #   permissions:
+  #     actions: read # Required to download repository artifact.
+  #     checks: write # Required to add status summary.
+  #     contents: read # Required to checkout repository.
+  #     id-token: write # Required to authenticate via OIDC.
+  #     pull-requests: write # Required to add PR comment and label.
+  #   environment: development
+  #   env:
+  #     TF_TOKEN_APP_TERRAFORM_IO: ${{ secrets.TF_TOKEN_APP_TERRAFORM_IO }}
+  #     # Run plan steps if the pull request does not have the 'approved' label
+  #     PLAN_TRIGGER: ${{ !(contains(github.event.pull_request.labels.*.name , 'approved')) }}
+  #     # Run apply steps if the pull request does have the 'approved' label
+  #     APPLY_TRIGGER: ${{ contains(github.event.pull_request.labels.*.name , 'approved') }}
 
-    steps:
-      # Assign the label and comment early in the workflow when approved to inform the user in the PR that something is happening
-      # Because the workflow is running in the issue_comment context the PR checks are not updated
-      - name: Update PR comment to request plan approval
-        if: ${{ env.APPLY_TRIGGER }}
-        uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
-        with:
-          header: tf-approval
-          recreate: true
-          message: |
-            #### Terraform Plan Approved.
+  #   steps:
+  #     # Assign the label and comment early in the workflow when approved to inform the user in the PR that something is happening
+  #     # Because the workflow is running in the issue_comment context the PR checks are not updated
+  #     - name: Update PR comment to request plan approval
+  #       if: ${{ env.APPLY_TRIGGER }}
+  #       uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
+  #       with:
+  #         header: tf-approval
+  #         recreate: true
+  #         message: |
+  #           #### Terraform Plan Approved.
 
-            Apply workflow is running. [View output](https://github.com/3ware/gitops-2024/actions/runs/${{ github.run_id }})
+  #           Apply workflow is running. [View output](https://github.com/3ware/gitops-2024/actions/runs/${{ github.run_id }})
 
-            > [!CAUTION]
-            > Do not merge the pull request until the apply workflow has completed.
+  #           > [!CAUTION]
+  #           > Do not merge the pull request until the apply workflow has completed.
 
-      # - name: Set environment variables
-      #   # Replace '/' with '-' Most things like dashes and do not like forward slashes
-      #   run: |
-      #     echo "REPOSITORY=$(echo ${{ github.repository }} | tr / -)" >> "$GITHUB_ENV"
+  #     # - name: Set environment variables
+  #     #   # Replace '/' with '-' Most things like dashes and do not like forward slashes
+  #     #   run: |
+  #     #     echo "REPOSITORY=$(echo ${{ github.repository }} | tr / -)" >> "$GITHUB_ENV"
 
-      - name: Checkout repository
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+  #     - name: Checkout repository
+  #       uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
-      - name: Configure AWS credentials via OIDC
-        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # v4.0.2
-        with:
-          aws-region: us-east-1
-          role-to-assume: ${{ secrets.AWS_DEV_OIDC_ROLE_ARN }}
-          # $REPOSITORY, as described in the github docs, does not work
-          role-session-name: gitops2024-development-terraform-deploy
+  #     - name: Configure AWS credentials via OIDC
+  #       uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # v4.0.2
+  #       with:
+  #         aws-region: us-east-1
+  #         role-to-assume: ${{ secrets.AWS_DEV_OIDC_ROLE_ARN }}
+  #         # $REPOSITORY, as described in the github docs, does not work
+  #         role-session-name: gitops2024-development-terraform-deploy
 
-      - name: Terraform
-        uses: devsectop/tf-via-pr@f1acaae1d94826457fa57bc65f1df318fd81b3bc # v12.0.0
-        id: terraform
-        with:
-          working-directory: terraform/development
-          # If the APPLY_TRIGGER is true, run 'apply'; if not, run 'plan'
-          command: ${{ env.APPLY_TRIGGER && 'apply' || 'plan' }}
-          arg-lock: ${{ env.APPLY_TRIGGER && 'true' || 'false' }}
-          plan-parity: ${{ env.APPLY_TRIGGER && 'true' || 'false' }}
-          hide-args: true
-          plan-encrypt: ${{ secrets.PGP_SECRET_SIGNING_PASSPHRASE }}
+  #     - name: Terraform
+  #       uses: devsectop/tf-via-pr@f1acaae1d94826457fa57bc65f1df318fd81b3bc # v12.0.0
+  #       id: terraform
+  #       with:
+  #         working-directory: terraform/development
+  #         # If the APPLY_TRIGGER is true, run 'apply'; if not, run 'plan'
+  #         command: ${{ env.APPLY_TRIGGER && 'apply' || 'plan' }}
+  #         arg-lock: ${{ env.APPLY_TRIGGER && 'true' || 'false' }}
+  #         plan-parity: ${{ env.APPLY_TRIGGER && 'true' || 'false' }}
+  #         hide-args: true
+  #         plan-encrypt: ${{ secrets.PGP_SECRET_SIGNING_PASSPHRASE }}
 
-      - name: Assign approval label
-        if: ${{ env.PLAN_TRIGGER }}
-        run: |
-          gh pr edit ${{ github.event.pull_request.number }} --add-label "approval required"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #     - name: Assign approval label
+  #       if: ${{ env.PLAN_TRIGGER }}
+  #       run: |
+  #         gh pr edit ${{ github.event.pull_request.number }} --add-label "approval required"
+  #       env:
+  #         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Update PR comment to request plan approval
-        if: ${{ env.PLAN_TRIGGER }}
-        uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
-        with:
-          header: tf-approval
-          message: |
-            #### Terraform Plan Approval required.
+  #     - name: Update PR comment to request plan approval
+  #       if: ${{ env.PLAN_TRIGGER }}
+  #       uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
+  #       with:
+  #         header: tf-approval
+  #         message: |
+  #           #### Terraform Plan Approval required.
 
-            Add the 'approved' label to apply the planned changes.
+  #           Add the 'approved' label to apply the planned changes.
 
-      #TODO: What to do when the plan is rejected
+  #     #TODO: What to do when the plan is rejected
 
-      # This plan should not produce a diff
-      - name: Check idempotency
-        if: ${{ env.APPLY_TRIGGER }}
-        id: idempotency
-        uses: devsectop/tf-via-pr@f1acaae1d94826457fa57bc65f1df318fd81b3bc # v12.0.0
-        with:
-          working-directory: terraform/development
-          command: plan
-          arg-lock: false
-          hide-args: true
-          plan-encrypt: ${{ secrets.PGP_SECRET_SIGNING_PASSPHRASE }}
+  #     # This plan should not produce a diff
+  #     - name: Check idempotency
+  #       if: ${{ env.APPLY_TRIGGER }}
+  #       id: idempotency
+  #       uses: devsectop/tf-via-pr@f1acaae1d94826457fa57bc65f1df318fd81b3bc # v12.0.0
+  #       with:
+  #         working-directory: terraform/development
+  #         command: plan
+  #         arg-lock: false
+  #         hide-args: true
+  #         plan-encrypt: ${{ secrets.PGP_SECRET_SIGNING_PASSPHRASE }}
 
-      - name: Add PR comment terraform diff
-        if: ${{ steps.idempotency.outputs.exitcode == 2 }}
-        uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
-        with:
-          header: Diff Error
-          message: |
-            > [!WARNING]
-            > ${{ github.workflow }} detected a diff after a successful `terraform apply`
+  #     - name: Add PR comment terraform diff
+  #       if: ${{ steps.idempotency.outputs.exitcode == 2 }}
+  #       uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
+  #       with:
+  #         header: Diff Error
+  #         message: |
+  #           > [!WARNING]
+  #           > ${{ github.workflow }} detected a diff after a successful `terraform apply`
 
-            Please resolve the error and commit your changes to re-run the workflow.
+  #           Please resolve the error and commit your changes to re-run the workflow.
 
-            [View log](https://github.com/3ware/gitops-2024/actions/runs/${{ github.run_id }})
+  #           [View log](https://github.com/3ware/gitops-2024/actions/runs/${{ github.run_id }})
 
-      - name: Diff Error
-        if: ${{ steps.idempotency.outputs.exitcode == 2 }}
-        run: |
-          exit 1
+  #     - name: Diff Error
+  #       if: ${{ steps.idempotency.outputs.exitcode == 2 }}
+  #       run: |
+  #         exit 1
