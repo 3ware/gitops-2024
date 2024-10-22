@@ -2,7 +2,7 @@ name: Drift Detection
 
 on:
   schedule:
-    - cron: 0 7 * * *
+    - cron: 0 */8 * * 1-5 # Every 8 Hours on weekdays
   workflow_dispatch: {}
 
 permissions: {}
@@ -38,7 +38,7 @@ jobs:
           role-session-name: gitops2024-development-terraform-deploy
 
       - name: Terraform Plan
-        uses: devsectop/tf-via-pr@01cbb55e2c19fee32e9783108c3aafb2baeaedff # v12.0.0-rc-1
+        uses: devsectop/tf-via-pr@f1acaae1d94826457fa57bc65f1df318fd81b3bc # v12.0.0
         id: drift-plan
         with:
           working-directory: terraform/development
@@ -51,12 +51,24 @@ jobs:
         uses: dacbd/create-issue-action@cdb57ab6ff8862aa09fee2be6ba77a59581921c2 # v2.0.0
         with:
           token: ${{ github.token }}
-          title: ${{ github.workflow }}
+          title: Configuration ${{ github.workflow }}
           body: |
-            ${{ github.workflow }} workflow run [${{ github.run_id }}](https://github.com/3ware/gitops-2024/actions/runs/${{ github.run_id }}) detected a diff.
 
-            Please check the workflow summary for details.
+            <details><summary>Diff of changes.</summary>
 
-            Add plan highlights to issue when available as outputs from upstream action
+            ```diff
+            ${{ steps.drift-plan.outputs.diff }}
+            ```
+            </details>
+
+            <details><summary>${{ steps.drift-plan.outputs.summary }}</summary>
+
+            ```hcl
+            ${{ steps.drift-plan.outputs.result }}
+            ```
+
+            </details>"
+
+            [View run log.](${{ steps.drift-plan.outputs.run-url }})
 
           labels: tf:diff
