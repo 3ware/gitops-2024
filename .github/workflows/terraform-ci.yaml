@@ -178,10 +178,6 @@ jobs:
     environment: development
     env:
       TF_TOKEN_APP_TERRAFORM_IO: ${{ secrets.TF_TOKEN_APP_TERRAFORM_IO }}
-      # Run plan steps if the pull request does not have the 'approved' label
-      PLAN_TRIGGER: ${{ !(contains(github.event.pull_request.labels.*.name , 'approved')) }}
-      # Run apply steps if the pull request does have the 'approved' label
-      APPLY_TRIGGER: ${{ contains(github.event.pull_request.labels.*.name , 'approved') }}
 
     steps:
       # Assign the label and comment early in the workflow when approved to inform the user in the PR that something is happening
@@ -191,7 +187,7 @@ jobs:
         uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
         with:
           header: status
-          recreate: true
+          hide_and_recreate: true
           message: |
             #### Terraform Plan Approved.
 
@@ -228,7 +224,7 @@ jobs:
         id: terraform
         with:
           working-directory: terraform/development
-          # If the APPLY_TRIGGER is true, run 'apply'; if not, run 'plan'
+          # If the 'approved' label exits, run 'apply'; if it doesn't run 'plan'
           command: ${{ contains(github.event.pull_request.labels.*.name , 'approved') && 'apply' || 'plan' }}
           arg-lock: ${{ contains(github.event.pull_request.labels.*.name , 'approved') && 'true' || 'false' }}
           # plan-parity: ${{ contains(github.event.pull_request.labels.*.name , 'approved') && 'true' || 'false' }}
@@ -242,7 +238,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Update status comment
+      - name: Add status comment
         if: ${{ !(contains(github.event.pull_request.labels.*.name , 'approved')) }}
         uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
         with:
@@ -272,7 +268,7 @@ jobs:
         uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
         with:
           header: status
-          recreate: true
+          hide_and_recreate: true
           message: |
             > [!WARNING]
             > ${{ github.workflow }} detected a diff after a successful `terraform apply`
@@ -313,7 +309,7 @@ jobs:
         uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
         with:
           header: status
-          recreate: true
+          hide_and_recreate: true
           message: |
             #### Terraform apply successful :rocket:
 
