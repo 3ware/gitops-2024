@@ -81,7 +81,7 @@ The main purpose of this mini camp is to build a GitOps pipeline to deploy resou
 |                         | Comment PR with useful Linter information |    :white_check_mark:    | See PR https://github.com/3ware/gitops-2024/pull/5         |
 |                         | Open an Issue if Drifted                  |    :white_check_mark:    | See Issue https://github.com/3ware/gitops-2024/issues/20   |
 |                         | Open an issue if port is inaccessible     |                          |                                                            |
-|                         | Comment on PR to apply                    |    :white_check_mark:    |                                                            |
+|                         | Comment on PR to apply                    |    :white_check_mark:    | See PR https://github.com/3ware/gitops-2024/pull/31        |
 
 </details>
 
