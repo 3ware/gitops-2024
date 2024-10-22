@@ -192,12 +192,14 @@ jobs:
           role-session-name: gitops2024-development-terraform-deploy
 
       - name: Terraform
-        uses: devsectop/tf-via-pr@cc83c7bae8216e747bb8c074524665b2416822f5 # v11.4.6
+        uses: devsectop/tf-via-pr@f1acaae1d94826457fa57bc65f1df318fd81b3bc # v12.0.0
         with:
-          arg_chdir: terraform/development
-          arg_command: ${{ env.APPLY_TRIGGER && 'apply' || 'plan' }}
-          arg_lock: ${{ env.APPLY_TRIGGER && 'true' || 'false' }}
-          plan_parity: ${{ env.APPLY_TRIGGER && 'true' || 'false' }}
+          working-directory: terraform/development
+          command: ${{ env.APPLY_TRIGGER && 'apply' || 'plan' }}
+          arg-lock: ${{ env.APPLY_TRIGGER && 'true' || 'false' }}
+          plan-parity: ${{ env.APPLY_TRIGGER && 'true' || 'false' }}
+          hide-args: true
+          plan-encrypt: ${{ secrets.PGP_SECRET_SIGNING_PASSPHRASE }}
 
       - name: Assign approval label
         if: ${{ github.event_name == 'pull_request' }}
@@ -217,16 +219,19 @@ jobs:
       - name: Check idempotency
         if: ${{ env.APPLY_TRIGGER }}
         id: idempotency
-        uses: devsectop/tf-via-pr@cc83c7bae8216e747bb8c074524665b2416822f5 # v11.4.6
+        uses: devsectop/tf-via-pr@f1acaae1d94826457fa57bc65f1df318fd81b3bc # v12.0.0
         with:
-          arg_chdir: terraform/development
-          arg_command: plan
-          arg_lock: false
-          arg_detailed_exitcode: true
-          arg_out: tfplan-${{ github.head_ref}}-PR${{ github.event.pull_request.number}}-check # Give this plan a different name
+          working-directory: terraform/development
+          command: plan
+          arg-lock: false
+          # TODO: Removed from current version.
+          #? How will we do a test destroy in dev without a diff plan which doesn't overwrite the main plan
+          #arg-out: tfplan-${{ github.head_ref}}-PR${{ github.event.pull_request.number}}-check # Give this plan a different name
+          hide-args: true
+          plan-encrypt: ${{ secrets.PGP_SECRET_SIGNING_PASSPHRASE }}
 
       - name: Add PR comment terraform diff
-        if: ${{ steps.idempotency.outputs.exitcode != 0 }}
+        if: ${{ steps.idempotency.outputs.exitcode == 2 }}
         uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
         with:
           header: Diff Error
@@ -238,6 +243,6 @@ jobs:
             ${{ github.workflow }} workflow run: [${{ github.run_id }}](https://github.com/3ware/gitops-2024/actions/runs/${{ github.run_id }})
 
       - name: Diff Error
-        if: ${{ steps.idempotency.outputs.exitcode != 0 }}
+        if: ${{ steps.idempotency.outputs.exitcode == 2 }}
         run: |
           exit 1
