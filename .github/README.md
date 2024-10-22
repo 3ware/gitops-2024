@@ -235,5 +235,5 @@ Generate a CHANGELOG and version tag using [semantic release](https://github.com
 - [ ] Grafana Port Check
 - [ ] Pull request labels environment
 - [ ] Job matrix / branched for multiple environments
-- [ ] Update plan comment with approval text as opposed to new comment
 - [ ] Replace manual terraform commands with tf-via-pr for fmt and validate now this is supported
+- [ ] `plan-parity` seems a bit flaky. Need to test properly and log issue if required
