@@ -3,13 +3,11 @@ name: Terraform CI
 on:
   pull_request:
     branches: [main]
-    types: [opened, synchronize]
+    types: [opened, labeled, synchronize]
     paths:
       - "**/*.tf"
       - "**/*.tfvars"
       - "**/*.tftpl"
-  issue_comment:
-    types: [created, edited]
 
 # Disable permissions for all available scopes.
 permissions: {}
@@ -26,7 +24,7 @@ defaults:
 
 jobs:
   test-terraform:
-    if: ${{ github.event_name == 'pull_request' }}
+    if: ${{ github.event.label.name != 'approved' }}
     name: Test Terraform
     runs-on: ubuntu-latest
     permissions:
@@ -164,12 +162,12 @@ jobs:
     runs-on: ubuntu-latest
     needs: [test-terraform]
     # This job should run `terraform plan` following the successful completion of test-terraform
-    # `terraform apply` is triggered when an approval comment is added to the pull request. A pr comment event does not trigger
+    # `terraform apply` is triggered when the 'approved' label is added to the pull request. A pr comment event does not trigger
     # the test workflow, so `terraform apply` should run when test-terraform is skipped
     if: |
       always() &&
       github.event_name == 'pull_request' && needs.test-terraform.result == 'success' ||
-      github.event.issue.pull_request && contains(github.event.comment.body, 'terraform plan approved') && needs.test-terraform.result == 'skipped'
+      github.event.label.name == 'approved' && needs.test-terraform.result == 'skipped'
     permissions:
       actions: read # Required to download repository artifact.
       checks: write # Required to add status summary.
@@ -181,7 +179,7 @@ jobs:
       TF_TOKEN_APP_TERRAFORM_IO: ${{ secrets.TF_TOKEN_APP_TERRAFORM_IO }}
       # Conditions that should evaluated to tru to run terraform apply
       # Used in `if` conditions to trigger certain steps below or change arguments
-      APPLY_TRIGGER: ${{ github.event.issue.pull_request && contains(github.event.comment.body, 'terraform plan approved') }}
+      APPLY_TRIGGER: ${{ github.event.label.name == 'approved' }}
 
     steps:
       # Assign the label and comment early in the workflow when approved to inform the user in the PR that something is happening
@@ -190,14 +188,14 @@ jobs:
         if: ${{ env.APPLY_TRIGGER }}
         uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
         with:
-          header: tf-approved
-          number: ${{ github.event.issue.number }}
+          header: tf-approval
+          recreate: true
           message: |
             #### Terraform Plan Approved.
 
             Apply workflow is running. [View output](https://github.com/3ware/gitops-2024/actions/runs/${{ github.run_id }})
 
-            > [!WARNING]
+            > [!CAUTION]
             > Do not merge the pull request until the apply workflow has completed.
 
       # - name: Set environment variables
@@ -207,13 +205,6 @@ jobs:
 
       - name: Checkout repository
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
-
-      - name: Assign approved label
-        if: ${{ env.APPLY_TRIGGER }}
-        run: |
-          gh pr edit ${{ github.event.issue.number }} --add-label "approved" --remove-label "approval required"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Configure AWS credentials via OIDC
         uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # v4.0.2
@@ -231,26 +222,26 @@ jobs:
           # If the APPLY_TRIGGER is true, run 'apply'; if not, run 'plan'
           command: ${{ env.APPLY_TRIGGER && 'apply' || 'plan' }}
           arg-lock: ${{ env.APPLY_TRIGGER && 'true' || 'false' }}
-          #plan-parity: ${{ env.APPLY_TRIGGER && 'true' || 'false' }}
+          plan-parity: ${{ env.APPLY_TRIGGER && 'true' || 'false' }}
           hide-args: true
           plan-encrypt: ${{ secrets.PGP_SECRET_SIGNING_PASSPHRASE }}
 
       - name: Assign approval label
-        if: ${{ github.event_name == 'pull_request' }}
+        if: ${{ github.event.label.name != 'approved' }}
         run: |
           gh pr edit ${{ github.event.pull_request.number }} --add-label "approval required"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Update PR comment to request plan approval
-        if: ${{ github.event_name == 'pull_request' }}
+        if: ${{ github.event.label.name != 'approved' }}
         uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
         with:
           header: tf-approval
           message: |
             #### Terraform Plan Approval required.
 
-            Add a comment with: **terraform plan approved** to approve.
+            Add the 'approved' label to apply the planned changes.
 
       #TODO: What to do when the plan is rejected
 
@@ -263,9 +254,6 @@ jobs:
           working-directory: terraform/development
           command: plan
           arg-lock: false
-          # TODO: Removed from current version.
-          #? How will we do a test destroy in dev without a diff plan which doesn't overwrite the main plan
-          #arg-out: tfplan-${{ github.head_ref}}-PR${{ github.event.pull_request.number}}-check # Give this plan a different name
           hide-args: true
           plan-encrypt: ${{ secrets.PGP_SECRET_SIGNING_PASSPHRASE }}
 
@@ -275,11 +263,12 @@ jobs:
         with:
           header: Diff Error
           message: |
-            ####  ${{ github.workflow }} detected a diff during deployment to the development environment
+            > [!WARNING]
+            > ${{ github.workflow }} detected a diff after a successful `terraform apply`
 
             Please resolve the error and commit your changes to re-run the workflow.
 
-            ${{ github.workflow }} workflow run: [${{ github.run_id }}](https://github.com/3ware/gitops-2024/actions/runs/${{ github.run_id }})
+            [View log](https://github.com/3ware/gitops-2024/actions/runs/${{ github.run_id }})
 
       - name: Diff Error
         if: ${{ steps.idempotency.outputs.exitcode == 2 }}

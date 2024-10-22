@@ -166,7 +166,7 @@ flowchart LR
   subgraph Development [Deploy Development Environment]
     direction LR
     devplan(terraform plan)-->AP{"`**Approve Plan**
-    via PR comment`"} -->|No|F
+    via 'approved` label"} -->|No|F
     AP -->|Yes|devapply(terraform apply) -->testdev("`**Diff Check**
     terraform plan -detailed-exitcode`") -->E{Exit code} -->|2 - Diff|PRC(PR Comment)
   end
@@ -210,10 +210,14 @@ The workflow uses [TF-via-PR](https://github.com/DevSecTop/TF-via-PR). This acti
 
 ##### Apply
 
-After `terraform plan` has been run, assuming the plan is satisfactory, comment on the pull request to approve the plan. The workflow will run again - this time running `terraform apply`, with `plan_parity` set, to ensure the plan has not changed.
+After `terraform plan` has been run, assuming the plan is satisfactory, add the 'approved' label to he pull request to approve the plan. The workflow will run again - this time running `terraform apply`, with `plan_parity` set, to ensure the plan has not changed.
+
+I tried using `pull_request_review` as the apply trigger, but this trigger does not support the paths filter which means an apply could be triggered when adding `.yaml` files - not ideal. See (https://github.com/3ware/gitops-2024/pull/22).
+
+I also tried using `issue_comment` but, because this runs on the default branch, a diff was always detected between `plan` and `apply` - not ideal. See (https://github.com/3ware/gitops-2024/pull/29)
 
 > [!NOTE]
-> Apply will run when the pull request comment body contains: **terraform plan approved** and the test workflow is skipped.
+> Apply will run when the 'approved' label is added and the test workflow is skipped.
 > The test workflow is skipped because it only runs on `pull_request` events. This has been tested in PR https://github.com/3ware/gitops-2024/pull/19
 
 ##### Diff Check
@@ -236,4 +240,3 @@ Generate a CHANGELOG and version tag using [semantic release](https://github.com
 - [ ] Pull request labels environment
 - [ ] Job matrix / branched for multiple environments
 - [ ] Replace manual terraform commands with tf-via-pr for fmt and validate now this is supported
-- [ ] `plan-parity` seems a bit flaky. Need to test properly and log issue if required
