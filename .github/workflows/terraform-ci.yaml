@@ -178,7 +178,7 @@ jobs:
     env:
       TF_TOKEN_APP_TERRAFORM_IO: ${{ secrets.TF_TOKEN_APP_TERRAFORM_IO }}
       # Run plan steps if the pull request does not have the 'approved' label
-      PLAN_TRIGGER: ${{ !contains(github.event.pull_request.labels.*.name , 'approved') }}
+      PLAN_TRIGGER: ${{ !(contains(github.event.pull_request.labels.*.name , 'approved')) }}
       # Run apply steps if the pull request does not have the 'approved' label
       APPLY_TRIGGER: ${{ contains(github.event.pull_request.labels.*.name , 'approved') }}
 
