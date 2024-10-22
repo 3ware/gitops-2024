@@ -186,11 +186,11 @@ jobs:
     steps:
       # Assign the label and comment early in the workflow when approved to inform the user in the PR that something is happening
       # Because the workflow is running in the issue_comment context the PR checks are not updated
-      - name: Update PR comment to request plan approval
+      - name: Update status comment
         if: ${{ contains(github.event.pull_request.labels.*.name , 'approved') }}
         uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
         with:
-          header: tf-approval
+          header: status
           recreate: true
           message: |
             #### Terraform Plan Approved.
@@ -242,11 +242,11 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Update PR comment to request plan approval
+      - name: Update status comment
         if: ${{ !(contains(github.event.pull_request.labels.*.name , 'approved')) }}
         uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
         with:
-          header: tf-approval
+          header: status
           message: |
             #### Terraform Plan Approval required.
 
@@ -266,20 +266,54 @@ jobs:
           hide-args: true
           plan-encrypt: ${{ secrets.PGP_SECRET_SIGNING_PASSPHRASE }}
 
-      - name: Add PR comment terraform diff
+      - name: Update status comment
         if: ${{ steps.idempotency.outputs.exitcode == 2 }}
         uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
         with:
-          header: Diff Error
+          header: status
+          recreate: true
           message: |
             > [!WARNING]
             > ${{ github.workflow }} detected a diff after a successful `terraform apply`
 
             Please resolve the error and commit your changes to re-run the workflow.
 
-            [View log](https://github.com/3ware/gitops-2024/actions/runs/${{ github.run_id }})
+            [View run log.](https://github.com/3ware/gitops-2024/actions/runs/${{ github.run_id }})
+
+      - name: Remove labels
+        if: ${{ steps.idempotency.outputs.exitcode == 2 }}
+        run: |
+          gh pr edit ${{ github.event.pull_request.number }} --remove-label "approved"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Diff Error
         if: ${{ steps.idempotency.outputs.exitcode == 2 }}
         run: |
           exit 1
+
+      - name: Update status comment
+        if: ${{ steps.idempotency.outputs.exitcode == 0 }}
+        uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
+        with:
+          header: status
+          recreate: true
+          message: |
+            #### Terraform apply successful :rocket:
+
+            <details><summary>Summary of changes.</summary>
+
+            ```diff
+            ${{ steps.terraform.outputs.diff }}
+            ```
+            </details>
+
+            <details><summary>${{ steps.terraform.outputs.summary }}</summary>
+
+            ```hcl
+            ${{ steps.terraform.outputs.result }}
+            ```
+
+            </details>
+
+            [View run log.](${{ steps.terraform.outputs.run-url }})
