@@ -24,7 +24,7 @@ defaults:
 
 jobs:
   test-terraform:
-    if: ${{ github.event.label.name != 'approved' }}
+    if: ${{ !contains(github.event.pull_request.labels.*.name , 'approved') }}
     name: Test Terraform
     runs-on: ubuntu-latest
     permissions:
@@ -167,7 +167,7 @@ jobs:
     if: |
       always() &&
       github.event_name == 'pull_request' && needs.test-terraform.result == 'success' ||
-      github.event.label.name == 'approved' && needs.test-terraform.result == 'skipped'
+      contains(github.event.pull_request.labels.name, 'approved') && needs.test-terraform.result == 'skipped'
     permissions:
       actions: read # Required to download repository artifact.
       checks: write # Required to add status summary.
@@ -177,9 +177,10 @@ jobs:
     environment: development
     env:
       TF_TOKEN_APP_TERRAFORM_IO: ${{ secrets.TF_TOKEN_APP_TERRAFORM_IO }}
-      # Conditions that should evaluated to tru to run terraform apply
-      # Used in `if` conditions to trigger certain steps below or change arguments
-      APPLY_TRIGGER: ${{ github.event.label.name == 'approved' }}
+      # Run plan steps if the pull request does not have the 'approved' label
+      PLAN_TRIGGER: ${{ !contains(github.event.pull_request.labels.*.name , 'approved') }}
+      # Run apply steps if the pull request does not have the 'approved' label
+      APPLY_TRIGGER: ${{ contains(github.event.pull_request.labels.*.name , 'approved') }}
 
     steps:
       # Assign the label and comment early in the workflow when approved to inform the user in the PR that something is happening
@@ -227,14 +228,14 @@ jobs:
           plan-encrypt: ${{ secrets.PGP_SECRET_SIGNING_PASSPHRASE }}
 
       - name: Assign approval label
-        if: ${{ github.event.label.name != 'approved' }}
+        if: ${{ env.PLAN_TRIGGER }}
         run: |
           gh pr edit ${{ github.event.pull_request.number }} --add-label "approval required"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Update PR comment to request plan approval
-        if: ${{ github.event.label.name != 'approved' }}
+        if: ${{ env.PLAN_TRIGGER }}
         uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
         with:
           header: tf-approval
