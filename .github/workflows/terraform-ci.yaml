@@ -190,8 +190,7 @@ jobs:
         if: ${{ env.APPLY_TRIGGER }}
         uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
         with:
-          header: tf-approval
-          append: true
+          header: tf-approved
           number: ${{ github.event.issue.number }}
           message: |
             #### Terraform Plan Approved.
@@ -232,7 +231,7 @@ jobs:
           # If the APPLY_TRIGGER is true, run 'apply'; if not, run 'plan'
           command: ${{ env.APPLY_TRIGGER && 'apply' || 'plan' }}
           arg-lock: ${{ env.APPLY_TRIGGER && 'true' || 'false' }}
-          plan-parity: ${{ env.APPLY_TRIGGER && 'true' || 'false' }}
+          #plan-parity: ${{ env.APPLY_TRIGGER && 'true' || 'false' }}
           hide-args: true
           plan-encrypt: ${{ secrets.PGP_SECRET_SIGNING_PASSPHRASE }}
 
