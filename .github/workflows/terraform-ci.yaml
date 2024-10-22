@@ -192,6 +192,7 @@ jobs:
         with:
           header: tf-approval
           append: true
+          number: ${{ github.event.issue.number }}
           message: |
             #### Terraform Plan Approved.
 
@@ -200,13 +201,6 @@ jobs:
             > [!WARNING]
             > Do not merge the pull request until the apply workflow has completed.
 
-      - name: Assign approved label
-        if: ${{ env.APPLY_TRIGGER }}
-        run: |
-          gh pr edit ${{ github.event.issue.number }} --add-label "approved" --remove-label "approval required"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       # - name: Set environment variables
       #   # Replace '/' with '-' Most things like dashes and do not like forward slashes
       #   run: |
@@ -214,6 +208,13 @@ jobs:
 
       - name: Checkout repository
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - name: Assign approved label
+        if: ${{ env.APPLY_TRIGGER }}
+        run: |
+          gh pr edit ${{ github.event.issue.number }} --add-label "approved" --remove-label "approval required"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Configure AWS credentials via OIDC
         uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # v4.0.2
