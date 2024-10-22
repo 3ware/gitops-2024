@@ -24,6 +24,7 @@ defaults:
 
 jobs:
   test-terraform:
+    # Do not run the test workflow if the 'approved' label is applied
     if: ${{ !(contains(github.event.pull_request.labels.*.name , 'approved')) }}
     name: Test Terraform
     runs-on: ubuntu-latest
