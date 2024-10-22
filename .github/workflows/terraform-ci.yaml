@@ -200,6 +200,12 @@ jobs:
           # $REPOSITORY, as described in the github docs, does not work
           role-session-name: gitops2024-development-terraform-deploy
 
+      - name: View context attributes
+        if: ${{ env.APPLY_TRIGGER }}
+        uses: actions/github-script@v7
+        with:
+          script: console.log(context)
+
       - name: Assign approved label
         if: ${{ env.APPLY_TRIGGER }}
         run: |
