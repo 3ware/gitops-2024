@@ -125,7 +125,7 @@ jobs:
         with:
           header: TLint error
           hide_and_recreate: true
-          hide_classify: OUTDATED
+          hide_classify: RESOLVED
           message: |
             #### TFLint failure :x:
 
@@ -208,8 +208,24 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Add PR comment to request plan approval
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
+        with:
+          header: approve-plan
+          hide_and_recreate: true
+          hide_classify: RESOLVED
+          message: |
+            #### Plan Approval required.
+
+            Add a comment with: **terraform plan approved** to approve.
+
+            Reject the plan with: **terraform plan rejected**
+
+      #TODO: What to do when the plan is rejected
+
       - name: Assign approved label
-        if: ${{ github.event_name == 'issue_comment' }}
+        if: ${{ env.APPLY_TRIGGER }}
         run: |
           gh pr edit ${{ github.event.pull_request.number }} --add-label "approved" --remove-label "approval required"
         env:
