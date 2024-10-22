@@ -200,6 +200,13 @@ jobs:
           # $REPOSITORY, as described in the github docs, does not work
           role-session-name: gitops2024-development-terraform-deploy
 
+      - name: Assign approved label
+        if: ${{ env.APPLY_TRIGGER }}
+        run: |
+          gh pr edit ${{ github.event.pull_request.number }} --add-label "approved" --remove-label "approval required"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Terraform
         uses: devsectop/tf-via-pr@f1acaae1d94826457fa57bc65f1df318fd81b3bc # v12.0.0
         id: terraform
@@ -231,13 +238,6 @@ jobs:
             Add a comment with: **terraform plan approved** to approve.
 
       #TODO: What to do when the plan is rejected
-
-      - name: Assign approved label
-        if: ${{ env.APPLY_TRIGGER }}
-        run: |
-          gh pr edit ${{ github.event.pull_request.number }} --add-label "approved" --remove-label "approval required"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # This plan should not produce a diff
       - name: Check idempotency
