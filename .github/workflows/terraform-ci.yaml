@@ -208,6 +208,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
+      - name: Remove approval label
+        if: ${{ contains(github.event.pull_request.labels.*.name , 'approved') }}
+        run: |
+          gh pr edit ${{ github.event.pull_request.number }} --remove-label "approval required"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Configure AWS credentials via OIDC
         uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # v4.0.2
         with:
@@ -224,7 +231,7 @@ jobs:
           # If the APPLY_TRIGGER is true, run 'apply'; if not, run 'plan'
           command: ${{ contains(github.event.pull_request.labels.*.name , 'approved') && 'apply' || 'plan' }}
           arg-lock: ${{ contains(github.event.pull_request.labels.*.name , 'approved') && 'true' || 'false' }}
-          plan-parity: ${{ contains(github.event.pull_request.labels.*.name , 'approved') && 'true' || 'false' }}
+          # plan-parity: ${{ contains(github.event.pull_request.labels.*.name , 'approved') && 'true' || 'false' }}
           hide-args: true
           plan-encrypt: ${{ secrets.PGP_SECRET_SIGNING_PASSPHRASE }}
 
