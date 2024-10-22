@@ -67,7 +67,7 @@ jobs:
             ${{ steps.drift-plan.outputs.result }}
             ```
 
-            </details>"
+            </details>
 
             [View run log.](${{ steps.drift-plan.outputs.run-url }})
 
