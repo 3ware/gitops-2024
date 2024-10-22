@@ -81,7 +81,7 @@ The main purpose of this mini camp is to build a GitOps pipeline to deploy resou
 |                         | Comment PR with useful Linter information |    :white_check_mark:    | See PR https://github.com/3ware/gitops-2024/pull/5         |
 |                         | Open an Issue if Drifted                  |    :white_check_mark:    | See Issue https://github.com/3ware/gitops-2024/issues/20   |
 |                         | Open an issue if port is inaccessible     |                          |                                                            |
-|                         | Comment on PR to apply                    |    :white_check_mark:    | PR is approved to apply                                    |
+|                         | Comment on PR to apply                    |    :white_check_mark:    |                                                            |
 
 </details>
 
@@ -92,12 +92,13 @@ The main purpose of this mini camp is to build a GitOps pipeline to deploy resou
 - Create a draft pull request that targets the main branch: `gh pr create --draft --base main`
 
 > [!IMPORTANT]
-> Pull Request must be set to draft to prevent CODEOWNER reviewers being assigned until the pull request is ready.
+> Pull Requests must be set to draft to prevent CODEOWNER reviewers being assigned until the pull request is ready.
 > This cannot be set by default. See [open discussion](https://github.com/orgs/community/discussions/6943).
 > Unfortunately this also cannot be automated because action runners, using `GITHUB_TOKEN` for authentication, are unable to run `gh pr ready --undo` as the integration is unavailable. See [open discussion](https://github.com/cli/cli/issues/8910)
 
+- The workflow will run through the tests (fmt, validate, TFLint), then run `terraform plan` and post the plan to the pull request and workflow job summary.
+- To approve the plan, comment on the plan with: **terraform plan approved**
 - When the [Workflows](#workflows) have completed, mark the PR as ready to assign a reviewer from CODEOWNERS. (again cannot be automated on a runner)
-- If the PR is approved, the workflow will run again to apply the changed.
 
 ### When to apply?
 
@@ -147,7 +148,7 @@ flowchart LR
   subgraph Pass
     direction LR
     P("`**Met Required Checks**
-    Merge PR`")
+    Merge PR`") -->docs(Run terraform-docs) -->rel(Generate a release)
   end
   subgraph Test
     direction LR
@@ -165,7 +166,7 @@ flowchart LR
   subgraph Development [Deploy Development Environment]
     direction LR
     devplan(terraform plan)-->AP{"`**Approve Plan**
-    via PR approval`"} -->|No|F
+    via PR comment`"} -->|No|F
     AP -->|Yes|devapply(terraform apply) -->testdev("`**Diff Check**
     terraform plan -detailed-exitcode`") -->E{Exit code} -->|2 - Diff|PRC(PR Comment)
   end
@@ -190,18 +191,14 @@ This workflow also flags any policy violations defined in [infracost-policy.rego
 
 - Setup AWS credentials using [config-aws-credentials](https://github.com/aws-actions/configure-aws-credentials) using OIDC to assume a role and set the authentication parameters as environment variables on the runner. This step is required when TFLint [deep checking](https://github.com/terraform-linters/tflint-ruleset-aws/blob/master/docs/deep_checking.md) for the AWS rule plugin is enabled.
 - ~~Setup terraform using [setup-terraform](https://github.com/hashicorp/setup-terraform)~~ Not required. terraform v1.9.7 already installed on runner image.
-
-> [!NOTE]
-> This may not be required because terraform 1.9.7 is installed on the [runner image](https://github.com/actions/runner-images/blob/ubuntu22/20241015.1/images/ubuntu/Ubuntu2204-Readme.md)
-
 - Run `terraform fmt`
 - Run `terraform init`
 - Run `terraform validate`
 - Install TFLint using [setup-tflint](https://github.com/terraform-linters/setup-tflint)
-- Initialise TFLint to download the AWS plugin rules
+- Initialise TFLint to download the AWS plugin rules.
 - Run `tflint`
-- Run [trunk code quality action](https://github.com/marketplace/actions/trunk-check); this runs checkov and trivy security checks
-- Update the PR comments if any of the steps fails and exit the workflow on failure
+- Run [trunk code quality action](https://github.com/marketplace/actions/trunk-check); this runs checkov and trivy security checks.
+- Update the PR comments if any of the steps fails and exit the workflow on failure.
 
 ##### Plan
 
@@ -213,10 +210,10 @@ The workflow uses [TF-via-PR](https://github.com/DevSecTop/TF-via-PR). This acti
 
 ##### Apply
 
-After `terraform plan` has been run, assuming the plan is satisfactory, mark the pull request ready for review. Assuming the pull request is approved, the workflow will run again - this time running `terraform apply`, with `plan_parity` set, to ensure the plan has not changed.
+After `terraform plan` has been run, assuming the plan is satisfactory, comment on the pull request to approve the plan. The workflow will run again - this time running `terraform apply`, with `plan_parity` set, to ensure the plan has not changed.
 
 > [!NOTE]
-> Apply will run on `pull_request_review` events when the PR is approved and the test workflow is skipped.
+> Apply will run when the pull request comment body contains: **terraform plan approved** and the test workflow is skipped.
 > The test workflow is skipped because it only runs on `pull_request` events. This has been tested in PR https://github.com/3ware/gitops-2024/pull/19
 
 ##### Diff Check
@@ -227,7 +224,7 @@ Following a successful apply, another plan is run to check for any diffs. If a d
 
 [Terraform docs](https://github.com/terraform-docs/gh-actions) will run when the pull request is merged. This only needs to run once, following the apply, and not on every commit to a pull request. Updating the README on every commit generates a lot unnecessary commits and you have to pull the updated README prior to the next push to avoid conflicts.
 
-I use my own [Terraform Docs reusable workflow](https://github.com/3ware/workflows/blob/main/.github/workflows/terraform-docs.yaml) which adds job summaries and verified commits.
+I use my own [Terraform Docs reusable workflow](https://github.com/3ware/workflows/blob/main/.github/workflows/terraform-docs.yaml) which adds job summaries and verified commits to the [terraform-docs gh-action](https://github.com/terraform-docs/gh-actions).
 
 #### Release
 
@@ -236,6 +233,7 @@ Generate a CHANGELOG and version tag using [semantic release](https://github.com
 ## To do list
 
 - [ ] Grafana Port Check
-- [ ] Test plan parity and drift detection
-- [ ] Pull request labels for : approval-required, approved, environment
+- [ ] Pull request labels environment
 - [ ] Job matrix / branched for multiple environments
+- [ ] Update plan comment with approval text as opposed to new comment
+- [ ] Replace manual terraform commands with tf-via-pr for fmt and validate now this is supported
