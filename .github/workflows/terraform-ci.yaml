@@ -187,7 +187,7 @@ jobs:
       # Assign the label and comment early in the workflow when approved to inform the user in the PR that something is happening
       # Because the workflow is running in the issue_comment context the PR checks are not updated
       - name: Update PR comment to request plan approval
-        if: ${{ env.APPLY_TRIGGER }}
+        if: ${{ contains(github.event.pull_request.labels.*.name , 'approved') }}
         uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
         with:
           header: tf-approval
