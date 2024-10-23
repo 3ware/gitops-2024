@@ -1,6 +1,6 @@
 # More Than Certified GitOps MiniCamp 2024
 
-The main purpose of this mini camp is to build a GitOps pipeline to deploy resources, managed by terraform to AWS using GitHub Actions.
+The main purpose of this mini camp is to build a GitOps pipeline to deploy resources, managed by terraform, to AWS using GitHub Actions.
 
 [![semantic-release: conventionalcommits](https://img.shields.io/badge/semantic--release-conventionalcommits-blue?logo=semantic-release)](https://github.com/semantic-release/semantic-release) [![GitHub release](https://img.shields.io/github/release/3ware/gitops-2024?include_prereleases=&sort=semver&color=yellow)](https://github.com/3ware/workflows/gitops-2024/) [![issues - workflows](https://img.shields.io/github/issues/3ware/gitops-2024)](https://github.com/3ware/gitops-2024/issues) [![CI](https://img.shields.io/github/actions/workflow/status/3ware/gitops-2024/wait-for-checks.yaml?label=CI&logo=githubactions&logoColor=white)](https://github.com/3ware/workflows/actions/gitops-2024/wait-for-checks.yaml)
 
@@ -97,7 +97,7 @@ The main purpose of this mini camp is to build a GitOps pipeline to deploy resou
 > Unfortunately this also cannot be automated because action runners, using `GITHUB_TOKEN` for authentication, are unable to run `gh pr ready --undo` as the integration is unavailable. See [open discussion](https://github.com/cli/cli/issues/8910)
 
 - The workflow will run through the tests (fmt, validate, TFLint), then run `terraform plan` and post the plan to the pull request and workflow job summary.
-- To approve the plan, comment on the plan with: **terraform plan approved**
+- To approve the plan, add the **approved** label.
 - When the [Workflows](#workflows) have completed, mark the PR as ready to assign a reviewer from CODEOWNERS. (again cannot be automated on a runner)
 
 ### When to apply?
@@ -198,21 +198,20 @@ This workflow also flags any policy violations defined in [infracost-policy.rego
 - Initialise TFLint to download the AWS plugin rules.
 - Run `tflint`
 - Run [trunk code quality action](https://github.com/marketplace/actions/trunk-check); this runs checkov and trivy security checks.
-- Update the PR comments if any of the steps fails and exit the workflow on failure.
+- Update the PR comments if any of the steps fail and exit the workflow on failure.
 
 ##### Plan
 
 When a draft pull request is opened, and the Test Terraform job has succeeded - a ` terraform plan` will be run.
 The workflow uses [TF-via-PR](https://github.com/DevSecTop/TF-via-PR). This action adds a high level plan and detailed drop down style plan to the workflow summary and updates the pull request with a comment.
 
-> [!NOTE]
-> Plan will run on `pull_request` events when the test job is successful.
+> [!NOTE] > `plan` will run on `pull_request` events when the test job is successful.
 
 ##### Apply
 
-After `terraform plan` has been run, assuming the plan is satisfactory, add the 'approved' label to he pull request to approve the plan. The workflow will run again - this time running `terraform apply`, with `plan_parity` set, to ensure the plan has not changed.
+After `terraform plan` has been run, assuming the plan is satisfactory, add the 'approved' label to he pull request to approve the plan. The workflow will run again - this time running `terraform apply`. ~~with `plan_parity` set, to ensure the plan has not changed~~
 
-I tried using `pull_request_review` as the apply trigger, but this trigger does not support the paths filter which means an apply could be triggered when adding `.yaml` files - not ideal. See (https://github.com/3ware/gitops-2024/pull/22).
+I tried using `pull_request_review` as the apply trigger, but this trigger does not support the paths filter. This means an apply could be triggered when adding non _tf_ files - not ideal. See (https://github.com/3ware/gitops-2024/pull/22).
 
 I also tried using `issue_comment` but, because this runs on the default branch, a diff was always detected between `plan` and `apply` - not ideal. See (https://github.com/3ware/gitops-2024/pull/29)
 
@@ -222,7 +221,7 @@ I also tried using `issue_comment` but, because this runs on the default branch,
 
 ##### Diff Check
 
-Following a successful apply, another plan is run to check for any diffs. If a diff is detected a pull request comment is added and the workflow exits with a failure. If a diff is not detected, the pull request can be merged.
+Following a successful apply, another plan is run to check for any diffs. If a diff is detected, a pull request comment is added and the workflow exits with a failure. If a diff is not detected, the pull request can be merged.
 
 #### Terraform Docs
 
@@ -240,3 +239,4 @@ Generate a CHANGELOG and version tag using [semantic release](https://github.com
 - [ ] Pull request labels environment
 - [ ] Job matrix / branched for multiple environments
 - [ ] Replace manual terraform commands with tf-via-pr for fmt and validate now this is supported
+- [ ] Raise `plan-parity` issue with TF-via-PR maintainer
