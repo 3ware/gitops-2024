@@ -1,9 +1,14 @@
 terraform {
-  required_version = ">=1.9.0"
+  # Must be above 1.9.0 to allow cross-object referencing for input variable validations
+  required_version = ">=1.9.0, <=2.0.0"
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "5.69.0"
+      version = "~>5.69.0"
+    }
+    http = {
+      source  = "hashicorp/http"
+      version = "~>3.4.5"
     }
   }
 }
