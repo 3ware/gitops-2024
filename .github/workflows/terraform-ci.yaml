@@ -187,7 +187,7 @@ jobs:
         uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
         with:
           header: status
-          hide_and_recreate: true
+          recreate: true
           message: |
             #### Terraform Plan Approved.
 
@@ -268,7 +268,7 @@ jobs:
         uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
         with:
           header: status
-          hide_and_recreate: true
+          recreate: true
           message: |
             > [!WARNING]
             > ${{ github.workflow }} detected a diff after a successful `terraform apply`
@@ -309,7 +309,7 @@ jobs:
         uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
         with:
           header: status
-          hide_and_recreate: true
+          recreate: true
           message: |
             #### Terraform apply successful :rocket:
 
