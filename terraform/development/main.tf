@@ -121,7 +121,8 @@ resource "aws_instance" "grafana_server" {
 
 check "grafana_check" {
   data "http" "grafana" {
-    url = "http://${aws_instance.grafana_server.public_ip}:3000"
+    url    = "http://${aws_instance.grafana_server.public_ip}:3000"
+    method = "HEAD"
   }
 
   assert {
