@@ -226,9 +226,7 @@ jobs:
           working-directory: terraform/development
           # If the 'approved' label exits, run 'apply'; if it doesn't run 'plan'
           command: ${{ contains(github.event.pull_request.labels.*.name , 'approved') && 'apply' || 'plan' }}
-          arg-lock: ${{ contains(github.event.pull_request.labels.*.name , 'approved') && 'true' || 'false' }}
-          # plan-parity: ${{ contains(github.event.pull_request.labels.*.name , 'approved') && 'true' || 'false' }}
-          hide-args: true
+          arg-lock: ${{ contains(github.event.pull_request.labels.*.name , 'approved') }}
           plan-encrypt: ${{ secrets.PGP_SECRET_SIGNING_PASSPHRASE }}
 
       - name: Assign approval label
@@ -259,7 +257,6 @@ jobs:
           working-directory: terraform/development
           command: plan
           arg-lock: false
-          hide-args: true
           plan-encrypt: ${{ secrets.PGP_SECRET_SIGNING_PASSPHRASE }}
           comment-pr: none
 
