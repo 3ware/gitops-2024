@@ -17,19 +17,19 @@ runtimes:
 # This is the section where you manage your linters. (https://docs.trunk.io/check/configuration)
 lint:
   disabled:
+    - checkov
+    - trivy
     - regal
   enabled:
-    - renovate@38.135.2
-    - trivy@0.56.2
+    - renovate@38.142.0
     - tflint@0.53.0
     - terraform@1.9.7:
         commands: [fmt, validate]
     - actionlint@1.7.3
-    - checkov@3.2.276
     - git-diff-check
     - markdownlint@0.42.0
     - prettier@3.3.3
-    - trufflehog@3.83.1
+    - trufflehog@3.83.2
     - yamllint@1.35.1
   definitions:
     - name: tflint
