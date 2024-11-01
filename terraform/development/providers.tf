@@ -4,7 +4,7 @@ data "sops_file" "aws_account_id" {
 
 provider "aws" {
   region              = var.region
-  allowed_account_ids = [data.sops_file.aws_account_id.data["dev_aws_account_id"]]
+  allowed_account_ids = [data.sops_file.aws_account_id.data["${var.environment}_aws_account_id"]]
   default_tags {
     tags = {
       "3ware:project-id"           = var.project_id
