@@ -1,4 +1,24 @@
 locals {
+  valid_environment = ["development"]
+}
+
+variable "environment" {
+  description = "(Required) Terraform deployment environment"
+  type        = string
+
+  validation {
+    condition = contains(local.valid_environment, var.environment)
+    error_message = format(
+      "Invalid environment provided. Received: '%s', Require: '%v'.\n%s",
+      var.environment,
+      join(", ", local.valid_environment),
+      "Change the environment variable value to one that is permitted."
+    )
+  }
+}
+
+
+locals {
   valid_instance_types = ["t2.micro"]
 }
 

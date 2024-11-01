@@ -1,3 +1,4 @@
+environment       = "development"
 instance_type     = "t2.micro"
 project_id        = "gitops-2024"
 region            = "us-east-1"
