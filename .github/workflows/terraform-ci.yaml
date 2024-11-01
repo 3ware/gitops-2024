@@ -38,7 +38,7 @@ jobs:
         uses: tj-actions/changed-files@c3a1bb2c992d77180ae65be6ae6c166cf40f857c # v45.0.3
         with:
           dir_names: true
-          dir_names_max_depth: 3
+          dir_names_max_depth: 2
           files: terraform/**
           matrix: true
 
