@@ -3,7 +3,8 @@ name: Checks
 on:
   pull_request:
     branches: [main]
-    types: [opened, edited, synchronize]
+  merge_group:
+    types: [checks_requested]
 
 # Disable permissions for all available scopes
 permissions: {}
