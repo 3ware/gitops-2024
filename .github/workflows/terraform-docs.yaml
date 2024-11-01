@@ -1,22 +1,19 @@
 name: Terraform Docs
+run-name: ${{ github.event.workflow_run.display_title }}
 
 on:
-  pull_request:
-    types: [closed]
-    branches: [main]
-    paths:
-      - "**/*.tf"
-      - "**/*.tfvars"
-      - "**/*.tftpl"
+  workflow_run:
+    workflows: [Terraform CI]
+    types: [completed]
 
 # Disable permissions for all available scopes
 permissions: {}
 
 jobs:
   terraform-docs:
-    if: ${{ github.event.pull_request.merged == true }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     name: Terraform Docs
     uses: 3ware/workflows/.github/workflows/terraform-docs.yaml@7880d6b986d1d689f5d219e901b863f1378fea9c # v4.4.0
     secrets: inherit
     with:
-      tf-directory: terraform/development
+      tf-directory: terraform
