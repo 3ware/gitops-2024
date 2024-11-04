@@ -30,6 +30,7 @@ The main purpose of this mini camp is to build a GitOps pipeline to deploy resou
       - [Terraform Docs](#terraform-docs)
       - [Release](#release)
   - [To do list](#to-do-list)
+  - [Contributions](#contributions)
 
 </details>
 
@@ -47,7 +48,7 @@ The main purpose of this mini camp is to build a GitOps pipeline to deploy resou
 |                         | State is stored remotely                  |    :white_check_mark:    |                                                            |
 |                         | State Locking mechanism is enabled        |    :white_check_mark:    |                                                            |
 | **Design and Code**     |                                           |                          |                                                            |
-|                         | Confirm Account Number                    |    :white_check_mark:    | data source post condition                                 |
+|                         | Confirm Account Number                    |    :white_check_mark:    | `allowed_account_ids` provider argument                    |
 |                         | Confirm Region                            |    :white_check_mark:    | variable validation                                        |
 |                         | Add Default Tags                          |    :white_check_mark:    | added to provider block                                    |
 |                         | Avoid Hardcoded Values                    |    :white_check_mark:    |                                                            |
@@ -273,3 +274,7 @@ Generate a CHANGELOG and version tag using [semantic release](https://github.com
 
 - [ ] Grafana Port Check
 - [ ] Fix drift detection for multiple environments
+
+## Contributions
+
+- Special mention to the maintainer of [TF-via-PR](https://github.com/DevSecTop/TF-via-PR) for responding to queries quickly and proactively suggesting workflow improvements.
