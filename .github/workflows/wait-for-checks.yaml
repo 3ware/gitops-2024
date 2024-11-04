@@ -1,4 +1,5 @@
 name: Checks
+run-name: ${{ github.event_name == 'merge_group' && github.event.merge_group.head_commit.message || ''}}
 
 on:
   pull_request:
