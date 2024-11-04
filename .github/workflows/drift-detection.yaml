@@ -38,12 +38,14 @@ jobs:
           role-session-name: gitops2024-development-terraform-deploy
 
       - name: Terraform Plan
-        uses: devsectop/tf-via-pr@f1acaae1d94826457fa57bc65f1df318fd81b3bc # v12.0.0
+        uses: devsectop/tf-via-pr@9dfb2360a5b7d5c3385276221e6e372467199e46 # v12.0.3
         id: drift-plan
         with:
           working-directory: terraform/development
           command: plan
-          hide-args: true
+          arg-lock: false
+          arg-refresh-only: true
+          label-pr: false
           plan-encrypt: ${{ secrets.PGP_SECRET_SIGNING_PASSPHRASE }}
 
       - name: Create Drift Issue
