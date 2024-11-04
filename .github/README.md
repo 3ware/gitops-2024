@@ -19,12 +19,14 @@ The main purpose of this mini camp is to build a GitOps pipeline to deploy resou
     - [Branching Strategy](#branching-strategy)
     - [Diagram](#diagram)
     - [Workflows](#workflows)
+      - [Actions Used](#actions-used)
       - [Infracost](#infracost)
       - [Terraform CI](#terraform-ci)
+        - [Targets](#targets)
         - [Validate](#validate)
         - [Plan](#plan)
         - [Apply](#apply)
-        - [Diff Check](#diff-check)
+        - [Enforce All Checks](#enforce-all-checks)
       - [Terraform Docs](#terraform-docs)
       - [Release](#release)
   - [To do list](#to-do-list)
@@ -63,8 +65,8 @@ The main purpose of this mini camp is to build a GitOps pipeline to deploy resou
 |                         | Infracost with comment                    |    :white_check_mark:    | See PR https://github.com/3ware/gitops-2024/pull/4         |
 |                         | Open Policy Agent fail if cost > $10      |    :white_check_mark:    | See PR https://github.com/3ware/gitops-2024/pull/6         |
 | **Deploy**              |                                           |                          |                                                            |
-|                         | terraform apply with human intervention   |    :white_check_mark:    | Applied when PR is approved                                |
-|                         | Deploy to production environment          |                          | Currently deploying to _development_ environment           |
+|                         | terraform apply with human intervention   |    :white_check_mark:    | Applied when PR is merged                                  |
+|                         | Deploy to production environment          |    :white_check_mark:    | Matrix strategy                                            |
 | **Operate and Monitor** |                                           |                          |                                                            |
 |                         | Scheduled drift detection                 |    :white_check_mark:    |                                                            |
 |                         | Scheduled port accessibility check        |                          |                                                            |
@@ -75,7 +77,7 @@ The main purpose of this mini camp is to build a GitOps pipeline to deploy resou
 |                         | Contribution Instructions                 |                          |                                                            |
 |                         | Explains merging strategy                 |    :white_check_mark:    |                                                            |
 | **Bonus**               |                                           |                          |                                                            |
-|                         | Deploy to multiple environments           |                          |                                                            |
+|                         | Deploy to multiple environments           |    :white_check_mark:    | See PR https://github.com/3ware/gitops-2024/pull/35        |
 |                         | Ignore non-terraform changes              |    :white_check_mark:    | Workflow trigger use paths filter for tf and tfvars files. |
 |                         | Comment PR with useful plan information   |    :white_check_mark:    | See PR https://github.com/3ware/gitops-2024/pull/7         |
 |                         | Comment PR with useful Linter information |    :white_check_mark:    | See PR https://github.com/3ware/gitops-2024/pull/5         |
@@ -97,12 +99,11 @@ The main purpose of this mini camp is to build a GitOps pipeline to deploy resou
 > Unfortunately this also cannot be automated because action runners, using `GITHUB_TOKEN` for authentication, are unable to run `gh pr ready --undo` as the integration is unavailable. See [open discussion](https://github.com/cli/cli/issues/8910)
 
 - The workflow will run through the tests (fmt, validate, TFLint), then run `terraform plan` and post the plan to the pull request and workflow job summary.
-- To approve the plan, add the **approved** label.
-- When the [Workflows](#workflows) have completed, mark the PR as ready to assign a reviewer from CODEOWNERS. (again cannot be automated on a runner)
+- To approve the plan, approve the pull request and add the pull request to merge queue.
 
 ### When to apply?
 
-The [debate rumbles on](https://terramate.io/rethinking-iac/mastering-terraform-workflows-apply-before-merge-vs-apply-after-merge/). In this case, because it's just me, apply before merge is fine.
+The [debate rumbles on](https://terramate.io/rethinking-iac/mastering-terraform-workflows-apply-before-merge-vs-apply-after-merge/). The [merge queue](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/managing-a-merge-queue) does a pretty good job of addressing this. If `apply` is triggered using the `merge_group` event, the workflow will attempt to apply the plan from the PR and then merge the PR. If the apply fails for any reason, then the PR is not merged.
 
 ### Directories vs Workspaces for multiple environments
 
@@ -110,7 +111,12 @@ Another debate. The best argument I have heard for directories was in the Q&A se
 
 > _"anyone should be able to `cd` into a terraform working directory and simply run `terraform plan` without have to worry about workspaces and variable files"_
 
-The workflow currently runs in the _development_ directory, with a view to having a _production_ directory should time allow.
+The workflow uses [changed-files](https://github.com/tj-actions/changed-files) to find the directories containing terraform changes. The output of this job is used to define the matrix strategy for the terraform workflow.
+
+Each directory is mapped to an environment which achieves 2 things:
+
+- Secrets, in the case, the AWS roles, are stored in the [environment](https://docs.github.com/en/actions/managing-workflow-runs-and-deployments/managing-deployments/managing-environments-for-deployment) - not the repository.
+- Deployments to production require additional approval.
 
 ### Branching Strategy
 
@@ -140,44 +146,73 @@ config:
   theme: neo
 ---
 flowchart LR
-  subgraph Fail
+  subgraph Fail Checks
     direction LR
-    F("`**Fail Required Checks**
+    Fail("`**Fail Required Checks**
     PR Cannot be merged`")
   end
-  subgraph Pass
+  subgraph Pass Checks
     direction LR
-    P("`**Met Required Checks**
-    Merge PR`") -->docs(Run terraform-docs) -->rel(Generate a release)
+    noTFPass("`**Met Required Checks**`") -->merge(Merge PR to main branch)
   end
-  subgraph Test
+  subgraph Pass Terraform Checks
     direction LR
-    setup("`**Setup**
-    AWS Credentials
-    Install and Initialise tofu
-    Install and Initialise TFLint
-    with AWS Plugin`") -->
-    validate{"`**Validate**
-    terraform fmt
-    terraform validate
-    tflint
-    Infracost fail if > $10`"} -->|Fail|F
+    TFPass("`**Met Required Checks**
+        Add to Merge Queue`") -->apply{terraform apply}
+    apply -->dev(Development) -->prd(Production) -->tfMerge(Complete Merge)
+    tfMerge -->docs(Run terraform-docs) -->rel(Generate a release)
+    apply -->|Fail|Fail
   end
-  subgraph Development [Deploy Development Environment]
+  subgraph Infracost
     direction LR
-    devplan(terraform plan)-->AP{"`**Approve Plan**
-    via 'approved' label`"} -->|No|F
-    AP -->|Yes|devapply(terraform apply) -->testdev("`**Diff Check**
-    terraform plan -detailed-exitcode`") -->E{Exit code} -->|2 - Diff|PRC(PR Comment)
+    ic{"`**Infracost**
+        Infracost fail if > $10`"} -->|Fail|Fail
   end
-  PR(Draft Pull Request) --> Test
-  validate -->|Pass|devplan
-  E{Exit code} -->|0 - Succeeded|P
-  PRC -->F
-  F -->|Make changes and resubmit|Test
+  subgraph Targets
+    direction LR
+    target{"`**Terraform Targets**
+        Search for terraform changes and output the directory name(s)`"} -->|No Changes|noTFPass
+  end
+  subgraph Deploy Development
+    direction LR
+    devSetup("`**Setup**
+        AWS Credentials
+        Install and Initialise TFLint
+        with AWS Plugin`") -->
+    devValidate{"`**Validate**
+        terraform fmt
+        terraform validate
+        tflint`"} -->|Fail|Fail
+    devValidate -->|Pass|devPlan(terraform plan)
+  end
+  subgraph Deploy Production
+    direction LR
+    prdSetup("`**Setup**
+        AWS Credentials
+        Install and Initialise TFLint
+        with AWS Plugin`") -->
+    prdValidate{"`**Validate**
+        terraform fmt
+        terraform validate
+        tflint`"} -->|Fail|Fail
+    prdValidate -->|Pass|prdPlan(terraform plan)
+  end
+PR(Draft Pull Request) -->target & ic
+target -->|Job Matrix|devSetup
+devPlan -->prdSetup
+prdPlan -->|Approve PR|TFPass
 ```
 
 ### Workflows
+
+#### Actions Used
+
+- [changed-files](https://github.com/tj-actions/changed-files)
+- [TF-via-PR](https://github.com/DevSecTop/TF-via-PR)
+- [Infracost](https://github.com/infracost/infracost)
+- [Terraform Docs](https://github.com/terraform-docs/gh-actions)
+- [Semantic Release](https://github.com/cycjimmy/semantic-release-action)
+- [Wait for Status Checks](https://github.com/poseidon/wait-for-status-checks)
 
 #### Infracost
 
@@ -187,7 +222,16 @@ This workflow also flags any policy violations defined in [infracost-policy.rego
 
 #### Terraform CI
 
+##### Targets
+
+The initial job of the workflow uses [changed-files](https://github.com/tj-actions/changed-files) to output the directories when terraform changes have been made. This output is uses ad the matrix strategy for the deploy job.
+
 ##### Validate
+
+Uses a matrix strategy to run in each directory identified in the targets job.
+
+> [!IMPORTANT]
+> The strategy has a max-parallel value of 1, which means the jobs are run sequentially
 
 - Setup AWS credentials using [config-aws-credentials](https://github.com/aws-actions/configure-aws-credentials) using OIDC to assume a role and set the authentication parameters as environment variables on the runner. This step is required when TFLint [deep checking](https://github.com/terraform-linters/tflint-ruleset-aws/blob/master/docs/deep_checking.md) for the AWS rule plugin is enabled.
 - ~~Setup terraform using [setup-terraform](https://github.com/hashicorp/setup-terraform)~~ Not required. terraform v1.9.7 already installed on runner image.
@@ -197,31 +241,21 @@ This workflow also flags any policy violations defined in [infracost-policy.rego
 - Install TFLint using [setup-tflint](https://github.com/terraform-linters/setup-tflint)
 - Initialise TFLint to download the AWS plugin rules.
 - Run `tflint`
-- Run [trunk code quality action](https://github.com/marketplace/actions/trunk-check); this runs checkov and trivy security checks.
 - Update the PR comments if any of the steps fail and exit the workflow on failure.
 
 ##### Plan
 
-When a draft pull request is opened, and the Test Terraform job has succeeded - a ` terraform plan` will be run.
-The workflow uses [TF-via-PR](https://github.com/DevSecTop/TF-via-PR). This action adds a high level plan and detailed drop down style plan to the workflow summary and updates the pull request with a comment.
-
-> [!NOTE] > `plan` will run on `pull_request` events when the test job is successful.
+When the validation steps have succeeded - a ` terraform plan` will be run. The conditional statement runs `plan` on a `pull_request` event. The workflow uses [TF-via-PR](https://github.com/DevSecTop/TF-via-PR). This action adds a high level plan and detailed drop down style plan to the workflow summary and updates the pull request with a comment.
 
 ##### Apply
 
-After `terraform plan` has been run, assuming the plan is satisfactory, add the 'approved' label to he pull request to approve the plan. The workflow will run again - this time running `terraform apply`. ~~with `plan_parity` set, to ensure the plan has not changed~~
+After `terraform plan` has been run, assuming the plan is accurate, approve the PR, and click `merge when ready`. This adds the pull request to the merge queue. The conditional statement in the workflow will run `terraform apply` on a `merge_group` event.
 
-I tried using `pull_request_review` as the apply trigger, but this trigger does not support the paths filter. This means an apply could be triggered when adding non _tf_ files - not ideal. See (https://github.com/3ware/gitops-2024/pull/22).
+##### Enforce All Checks
 
-I also tried using `issue_comment` but, because this runs on the default branch, a diff was always detected between `plan` and `apply` - not ideal. See (https://github.com/3ware/gitops-2024/pull/29)
+The only required check for the pull request.
 
-> [!NOTE]
-> Apply will run when the 'approved' label is added and the test workflow is skipped.
-> The test workflow is skipped because it only runs on `pull_request` events. This has been tested in PR https://github.com/3ware/gitops-2024/pull/19
-
-##### Diff Check
-
-Following a successful apply, another plan is run to check for any diffs. If a diff is detected, a pull request comment is added and the workflow exits with a failure. If a diff is not detected, the pull request can be merged.
+Uses [Wait for Status Checks](https://github.com/poseidon/wait-for-status-checks) to poll the checks API for the status of the other running checks. This helps to overcome the situation where a required check may not run. For example, we could make Terraform CI a required check but, this workflow may not run (so it is skipped) and consequently the required check is not met. This workflow will detect that Terraform CI has been skipped and return an outcome of successful for itself, so the required check passes.
 
 #### Terraform Docs
 
@@ -236,7 +270,4 @@ Generate a CHANGELOG and version tag using [semantic release](https://github.com
 ## To do list
 
 - [ ] Grafana Port Check
-- [ ] Pull request labels environment
-- [ ] Job matrix / branched for multiple environments
-- [ ] Replace manual terraform commands with tf-via-pr for fmt and validate now this is supported
-- [ ] Raise `plan-parity` issue with TF-via-PR maintainer
+- [ ] Fix drift detection for multiple environments
