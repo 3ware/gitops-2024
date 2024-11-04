@@ -1,15 +1,13 @@
 name: Terraform CI
+run-name: ${{ github.event_name == 'merge_group' && github.event.merge_group.head_commit.message || ''}}
 
 on:
   pull_request:
+    types: [opened, synchronize]
     branches: [main]
-    types: [opened, labeled, synchronize]
-    paths:
-      - "**/*.tf"
-      - "**/*.tfvars"
-      - "**/*.tftpl"
+  merge_group:
+    types: [checks_requested]
 
-# Disable permissions for all available scopes.
 permissions: {}
 
 concurrency:
@@ -19,26 +17,63 @@ concurrency:
 defaults:
   run:
     shell: bash
-    #TODO: Move this to job level if using matrix
-    working-directory: ./terraform/development
 
 jobs:
-  test-terraform:
-    # Do not run the test workflow if the 'approved' label is applied
-    if: ${{ !(contains(github.event.pull_request.labels.*.name , 'approved')) }}
-    name: Test Terraform
+  targets:
+    name: Terraform Targets
     runs-on: ubuntu-latest
     permissions:
-      checks: write
       contents: read
-      id-token: write
-      pull-requests: write
-    #TODO: Use matrix for different environments
-    environment: development
-
+    outputs:
+      targets: ${{ steps.directories.outputs.all_changed_files }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Check changed directories
+        id: directories
+        uses: tj-actions/changed-files@c3a1bb2c992d77180ae65be6ae6c166cf40f857c # v45.0.3
+        with:
+          dir_names: true
+          dir_names_max_depth: 2
+          files: terraform/**
+          matrix: true
+
+  terraform-deploy:
+    needs: [targets]
+    if: ${{ needs.targets.outputs.targets != '[]' }}
+    name: Terraform Deploy
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read # Required to identify workflow run.
+      checks: write # Required to add status summary.
+      contents: read # Required to checkout repository.
+      id-token: write # Require for OIDC.
+      pull-requests: write # Required to add comment and label.
+    strategy:
+      fail-fast: true
+      max-parallel: 1
+      matrix:
+        targets: ${{ fromJson(needs.targets.outputs.targets) }}
+    environment: ${{ contains(matrix.targets, 'production') && 'production' || 'development' }}
+    env:
+      TF_TOKEN_APP_TERRAFORM_IO: ${{ secrets.TF_TOKEN_APP_TERRAFORM_IO }}
+      SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      # This is required because the 'environment' context does not exist, do cannot be referenced
+      # my the steps that need it
+      - name: Set deployment environment as an environment variable
+        run: |
+          echo "ENVIRONMENT=${{ contains(matrix.targets, 'production') && 'production' || 'development' }}" >> $GITHUB_ENV
 
       # AWS Credentials required for tflint deep check
       - name: Configure AWS credentials via OIDC
@@ -46,32 +81,43 @@ jobs:
         with:
           aws-region: us-east-1
           mask-aws-account-id: true
-          #TODO: Secrets will need renaming if using matrix for environments. eg AWS_${{ matrix.environment }}_OIDC_ROLE_ARN
-          role-to-assume: ${{ secrets.AWS_DEV_OIDC_ROLE_ARN }}
-          role-session-name: tflint-deep-check
+          role-to-assume: ${{ secrets[format('GHA_3WARE_OIDC_{0}', env.ENVIRONMENT)] }}
+          role-session-name: ${{ github.event_name == 'merge_group' && 'aws-net-sec-terraform-apply' || 'aws-net-sec-terraform-plan' }}
 
       - name: Cache TFLint plugin directory
+        if: ${{ github.event_name == 'pull_request' }}
         uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
         with:
           path: .trunk/plugins/
           key: ${{ runner.os }}-${{ github.repository }}-tflint-${{ hashFiles('.trunk/configs/.tflint_ci.hcl') }}
 
+      # Required, even though terraform is installed on the run because sometimes the plan and apply jobs will fail due to versions differences between
+      # the runners
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd
+        with:
+          terraform_version: 1.9.7
+          terraform_wrapper: true
+
       # Run terraform format
       - name: Terraform fmt
+        if: ${{ github.event_name == 'pull_request' }}
         id: tf-fmt
-        run: terraform fmt -check
+        run: terraform -chdir=${{ matrix.targets }} fmt -check
         continue-on-error: true
 
       # Initialise terraform in the directory where terraform file have changed.
       - name: Initialise terraform
+        if: ${{ github.event_name == 'pull_request' }}
         id: tf-init
         run: |
-          terraform init -backend=false
+          terraform -chdir=${{ matrix.targets }} init -backend=false
 
       # Run terraform validate
       - name: Terraform validate
+        if: ${{ github.event_name == 'pull_request' }}
         id: tf-validate
-        run: terraform validate -no-color
+        run: terraform -chdir=${{ matrix.targets }} validate -no-color
         continue-on-error: true
 
       # Add PR comment with formatting and validation errors
@@ -79,15 +125,16 @@ jobs:
         if: ${{ steps.tf-fmt.outputs.exitcode != 0 || steps.tf-validate.outputs.exitcode != 0 }}
         uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
         with:
-          header: Terraform validation error
-          hide_and_recreate: true
-          hide_classify: OUTDATED
+          header: test-${{ matrix.targets }}
+          recreate: true
           message: |
-            #### Terraform Format and Style ${{ steps.tf-fmt.outcome }} :x:
+            #### ${{ matrix.targets }}
+
+            #### :x: Terraform Format and Style ${{ steps.tf-fmt.outcome }}
 
             ${{ steps.tf-fmt.outputs.stdout }}
 
-            #### Terraform Validation ${{ steps.tf-validate.outcome }} :x:
+            #### :x: Terraform Validation ${{ steps.tf-validate.outcome }}
 
             ```
             ${{ steps.tf-validate.outputs.stderr }}
@@ -103,21 +150,24 @@ jobs:
 
       # Install TFLint; required to download plugins
       - name: Install TFLint
+        if: ${{ github.event_name == 'pull_request' }}
         uses: terraform-linters/setup-tflint@15ef44638cb215296e7ba9e7a41f20b5b06f4784 # v4.0.0
         with:
           tflint_version: v0.53.0
           tflint_wrapper: true
 
-      # Initialise TFLint using the configuration file for CI in the trunk directory
-      # The CI configuration enables deep check
+      # Initialise TFLint using the configuration file in the trunk directory
       - name: Initialise TFLint
+        if: ${{ github.event_name == 'pull_request' }}
+        shell: bash
         run: |
-          tflint --init --config=$GITHUB_WORKSPACE/.trunk/configs/.tflint_ci.hcl
+          tflint -chdir=${{ matrix.targets }} --init --config=$GITHUB_WORKSPACE/.trunk/configs/.tflint_ci.hcl
 
       - name: Run TFLint
+        if: ${{ github.event_name == 'pull_request' }}
         id: tflint
         run: |
-          tflint --config=$GITHUB_WORKSPACE/.trunk/configs/.tflint_ci.hcl --format compact
+          tflint -chdir=${{ matrix.targets }} --config=$GITHUB_WORKSPACE/.trunk/configs/.tflint_ci.hcl --format compact
         continue-on-error: true
 
       # Add PR comment when TFLint detects a violation
@@ -125,11 +175,12 @@ jobs:
         if: ${{ steps.tflint.outputs.exitcode != 0 }}
         uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
         with:
-          header: TLint error
-          hide_and_recreate: true
-          hide_classify: RESOLVED
+          header: test-${{ matrix.targets }}
+          recreate: true
           message: |
-            #### TFLint failure :x:
+            #### ${{ matrix.targets }}
+
+            #### :x: TFLint failure
 
             ```
             ${{ steps.tflint.outputs.stdout }}
@@ -143,182 +194,24 @@ jobs:
         run: |
           exit 1
 
-      # Run Trunk Check without terraform and tflint due to deep check issue
-      - name: Trunk Check
-        uses: trunk-io/trunk-action@2eaee169140ec559bd556208f9f99cdfdf468da8 # v1.1.17
-        with:
-          arguments: --filter checkov,trivy
-
-      - name: Add PR comment for Test success
+      - name: Update PR comment for Test success
+        if: ${{ github.event_name == 'pull_request' }}
         uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
         with:
-          header: TF Success
-          message: |
-            #### Terraform Format and Style ${{ steps.tf-fmt.outcome }} :white_check_mark:
-            #### Terraform Validation ${{ steps.tf-validate.outcome }} :white_check_mark:
-            #### TFLint ${{ steps.tf-validate.outcome }} :white_check_mark:
-
-  plan-and-apply:
-    name: Terraform Deploy
-    runs-on: ubuntu-latest
-    needs: [test-terraform]
-    # This job should run `terraform plan` following the successful completion of test-terraform
-    # `terraform apply` is triggered when the 'approved' label is added to the pull request. An 'approved' label does not trigger
-    # the test workflow, so `terraform apply` should run when test-terraform is skipped
-    if: |
-      always() &&
-      github.event_name == 'pull_request' && needs.test-terraform.result == 'success' ||
-      github.event.label.name =='approved' && needs.test-terraform.result == 'skipped'
-    permissions:
-      actions: read # Required to download repository artifact.
-      checks: write # Required to add status summary.
-      contents: read # Required to checkout repository.
-      id-token: write # Required to authenticate via OIDC.
-      pull-requests: write # Required to add PR comment and label.
-    environment: development
-    env:
-      TF_TOKEN_APP_TERRAFORM_IO: ${{ secrets.TF_TOKEN_APP_TERRAFORM_IO }}
-
-    steps:
-      # Assign the label and comment early in the workflow when approved to inform the user in the PR that something is happening
-      # Because the workflow is running in the issue_comment context the PR checks are not updated
-      - name: Update status comment
-        if: ${{ contains(github.event.pull_request.labels.*.name , 'approved') }}
-        uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
-        with:
-          header: status
+          header: test-${{ matrix.targets }}
           recreate: true
           message: |
-            #### Terraform Plan Approved.
+            #### ${{ matrix.targets }}
 
-            Apply workflow is running. [View output](https://github.com/3ware/gitops-2024/actions/runs/${{ github.run_id }})
+            #### :white_check_mark: Terraform Format and Style ${{ steps.tf-fmt.outcome }}
+            #### :white_check_mark: Terraform Validation ${{ steps.tf-validate.outcome }}
+            #### :white_check_mark: TFLint ${{ steps.tf-validate.outcome }}
 
-            > [!CAUTION]
-            > Do not merge the pull request until the apply workflow has completed.
-
-      # - name: Set environment variables
-      #   # Replace '/' with '-' Most things like dashes and do not like forward slashes
-      #   run: |
-      #     echo "REPOSITORY=$(echo ${{ github.repository }} | tr / -)" >> "$GITHUB_ENV"
-
-      - name: Checkout repository
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
-
-      - name: Remove approval label
-        if: ${{ contains(github.event.pull_request.labels.*.name , 'approved') }}
-        run: |
-          gh pr edit ${{ github.event.pull_request.number }} --remove-label "approval required"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Configure AWS credentials via OIDC
-        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # v4.0.2
-        with:
-          aws-region: us-east-1
-          role-to-assume: ${{ secrets.AWS_DEV_OIDC_ROLE_ARN }}
-          # $REPOSITORY, as described in the github docs, does not work
-          role-session-name: gitops2024-development-terraform-deploy
-
-      - name: Terraform
-        uses: devsectop/tf-via-pr@f1acaae1d94826457fa57bc65f1df318fd81b3bc # v12.0.0
-        id: terraform
-        with:
-          working-directory: terraform/development
-          # If the 'approved' label exits, run 'apply'; if it doesn't run 'plan'
-          command: ${{ contains(github.event.pull_request.labels.*.name , 'approved') && 'apply' || 'plan' }}
-          arg-lock: ${{ contains(github.event.pull_request.labels.*.name , 'approved') && 'true' || 'false' }}
-          # plan-parity: ${{ contains(github.event.pull_request.labels.*.name , 'approved') && 'true' || 'false' }}
-          hide-args: true
-          plan-encrypt: ${{ secrets.PGP_SECRET_SIGNING_PASSPHRASE }}
-
-      - name: Assign approval label
-        if: ${{ !(contains(github.event.pull_request.labels.*.name , 'approved')) }}
-        run: |
-          gh pr edit ${{ github.event.pull_request.number }} --add-label "approval required"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Add status comment
-        if: ${{ !(contains(github.event.pull_request.labels.*.name , 'approved')) }}
-        uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
-        with:
-          header: status
-          message: |
-            #### Terraform Plan Approval required.
-
-            Add the 'approved' label to apply the planned changes.
-
-      #TODO: What to do when the plan is rejected
-
-      # This plan should not produce a diff
-      - name: Check idempotency
-        if: ${{ contains(github.event.pull_request.labels.*.name , 'approved') }}
-        id: idempotency
+      - name: Provision TF
         uses: devsectop/tf-via-pr@f1acaae1d94826457fa57bc65f1df318fd81b3bc # v12.0.0
         with:
-          working-directory: terraform/development
-          command: plan
-          arg-lock: false
-          hide-args: true
+          command: ${{ github.event_name == 'merge_group' && 'apply' || 'plan' }}
+          arg-lock: ${{ github.event_name == 'merge_group' }}
+          working-directory: ${{ matrix.targets }}
           plan-encrypt: ${{ secrets.PGP_SECRET_SIGNING_PASSPHRASE }}
-          comment-pr: none
-
-      - name: Update status comment
-        if: ${{ steps.idempotency.outputs.exitcode == 2 }}
-        uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
-        with:
-          header: status
-          recreate: true
-          message: |
-            > [!WARNING]
-            > ${{ github.workflow }} detected a diff after a successful `terraform apply`
-
-            Please resolve the error and commit your changes to re-run the workflow.
-
-            <details><summary>Diff of changes.</summary>
-
-            ```diff
-            ${{ steps.idempotency.outputs.diff }}
-            ```
-            </details>
-
-            <details><summary>${{ steps.idempotency.outputs.summary }}</summary>
-
-            ```hcl
-            ${{ steps.idempotency.outputs.result }}
-            ```
-
-            </details>
-
-            [View run log.](${{ steps.idempotency.outputs.run-url }})
-
-      - name: Remove labels
-        if: ${{ steps.idempotency.outputs.exitcode == 2 }}
-        run: |
-          gh pr edit ${{ github.event.pull_request.number }} --remove-label "approved"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Diff Error
-        if: ${{ steps.idempotency.outputs.exitcode == 2 }}
-        run: |
-          exit 1
-
-      - name: Update status comment
-        if: ${{ contains(github.event.pull_request.labels.*.name , 'approved') && steps.idempotency.outputs.exitcode == 0 }}
-        uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
-        with:
-          header: status
-          recreate: true
-          message: |
-            #### Terraform apply successful :rocket:
-
-            <details><summary>Summary of changes.</summary>
-
-            ```diff
-            ${{ steps.terraform.outputs.diff }}
-            ```
-
-            </details>
-
-            [View run log.](${{ steps.terraform.outputs.run-url }})
+          comment-pr: recreate

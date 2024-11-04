@@ -1,5 +1,5 @@
 locals {
-  valid_environment = ["development"]
+  valid_environment = ["production"]
 }
 
 variable "environment" {

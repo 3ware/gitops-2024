@@ -1,9 +1,11 @@
 name: Checks
+run-name: ${{ github.event_name == 'merge_group' && github.event.merge_group.head_commit.message || ''}}
 
 on:
   pull_request:
     branches: [main]
-    types: [opened, edited, synchronize]
+  merge_group:
+    types: [checks_requested]
 
 # Disable permissions for all available scopes
 permissions: {}
