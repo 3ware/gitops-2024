@@ -210,6 +210,8 @@ prdPlan -->|Approve PR|TFPass
 - [changed-files](https://github.com/tj-actions/changed-files)
 - [TF-via-PR](https://github.com/DevSecTop/TF-via-PR)
 - [Infracost](https://github.com/infracost/infracost)
+- [Setup Terraform](https://github.com/hashicorp/setup-terraform/commits/main/)
+- [Setup TFLint](https://github.com/terraform-linters/setup-tflint)
 - [Terraform Docs](https://github.com/terraform-docs/gh-actions)
 - [Semantic Release](https://github.com/cycjimmy/semantic-release-action)
 - [Wait for Status Checks](https://github.com/poseidon/wait-for-status-checks)
@@ -234,7 +236,7 @@ Uses a matrix strategy to run in each directory identified in the targets job.
 > The strategy has a max-parallel value of 1, which means the jobs are run sequentially
 
 - Setup AWS credentials using [config-aws-credentials](https://github.com/aws-actions/configure-aws-credentials) using OIDC to assume a role and set the authentication parameters as environment variables on the runner. This step is required when TFLint [deep checking](https://github.com/terraform-linters/tflint-ruleset-aws/blob/master/docs/deep_checking.md) for the AWS rule plugin is enabled.
-- ~~Setup terraform using [setup-terraform](https://github.com/hashicorp/setup-terraform)~~ Not required. terraform v1.9.7 already installed on runner image.
+- Install terraform using [setup-terraform](https://github.com/hashicorp/setup-terraform). _Despite being installed on the runners, `apply` jobs were failing due to version differences between the apply runner and the plan runner_
 - Run `terraform fmt`
 - Run `terraform init`
 - Run `terraform validate`

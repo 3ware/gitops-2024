@@ -91,6 +91,14 @@ jobs:
           path: .trunk/plugins/
           key: ${{ runner.os }}-${{ github.repository }}-tflint-${{ hashFiles('.trunk/configs/.tflint_ci.hcl') }}
 
+      # Required, even though terraform is installed on the run because sometimes the plan and apply jobs will fail due to versions differences between
+      # the runners
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd
+        with:
+          terraform_version: 1.9.7
+          terraform_wrapper: true
+
       # Run terraform format
       - name: Terraform fmt
         if: ${{ github.event_name == 'pull_request' }}
