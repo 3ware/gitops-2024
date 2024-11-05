@@ -26,7 +26,7 @@ The main purpose of this mini camp is to build a GitOps pipeline to deploy resou
         - [Validate](#validate)
         - [Plan](#plan)
         - [Apply](#apply)
-        - [Enforce All Checks](#enforce-all-checks)
+      - [Enforce All Checks](#enforce-all-checks)
       - [Terraform Docs](#terraform-docs)
       - [Release](#release)
   - [To do list](#to-do-list)
@@ -227,14 +227,14 @@ This workflow also flags any policy violations defined in [infracost-policy.rego
 
 ##### Targets
 
-The initial job of the workflow uses [changed-files](https://github.com/tj-actions/changed-files) to output the directories when terraform changes have been made. This output is uses ad the matrix strategy for the deploy job.
+The initial job of the workflow uses [changed-files](https://github.com/tj-actions/changed-files) to output the directories where terraform changes have been made. This output is uses ad the matrix strategy for the deploy job.
 
 ##### Validate
 
 Uses a matrix strategy to run in each directory identified in the targets job.
 
 > [!IMPORTANT]
-> The strategy has a max-parallel value of 1, which means the jobs are run sequentially
+> The strategy has a max-parallel value of 1, which means the jobs are run sequentially.
 
 - Setup AWS credentials using [config-aws-credentials](https://github.com/aws-actions/configure-aws-credentials) using OIDC to assume a role and set the authentication parameters as environment variables on the runner. This step is required when TFLint [deep checking](https://github.com/terraform-linters/tflint-ruleset-aws/blob/master/docs/deep_checking.md) for the AWS rule plugin is enabled.
 - Install terraform using [setup-terraform](https://github.com/hashicorp/setup-terraform). _Despite being installed on the runners, `apply` jobs were failing due to version differences between the apply runner and the plan runner_
@@ -254,7 +254,7 @@ When the validation steps have succeeded - a ` terraform plan` will be run. The 
 
 After `terraform plan` has been run, assuming the plan is accurate, approve the PR, and click `merge when ready`. This adds the pull request to the merge queue. The conditional statement in the workflow will run `terraform apply` on a `merge_group` event.
 
-##### Enforce All Checks
+#### Enforce All Checks
 
 The only required check for the pull request.
 
