@@ -69,8 +69,8 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      # This is required because the 'environment' context does not exist, do cannot be referenced
-      # my the steps that need it
+      # This is required because the 'environment' context does not exist, so cannot be referenced
+      # by the steps that need it
       - name: Set deployment environment as an environment variable
         run: |
           echo "ENVIRONMENT=${{ contains(matrix.targets, 'production') && 'production' || 'development' }}" >> $GITHUB_ENV
