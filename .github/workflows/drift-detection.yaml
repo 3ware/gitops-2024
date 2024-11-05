@@ -11,39 +11,82 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.repository }}
   cancel-in-progress: true
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
+  targets:
+    name: Terraform Targets
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # Required to checkout repository.
+    timeout-minutes: 5
+    outputs:
+      targets: ${{ steps.directories.outputs.matrix }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        with:
+          persist-credentials: false
+
+      - uses: nahsi/files-to-matrix@c304d92b75c7b24edfe1479b62173b6f70813db7 #v1.0.1
+        id: directories
+        with:
+          files: terraform/**
+          settings: >-
+            [
+              {
+                "name": "dir",
+                "level": 1
+              }
+            ]
+
   drift-detection:
+    needs: [targets]
     name: Drift Detection
     runs-on: ubuntu-latest
     permissions:
-      actions: read # Required to download repository artifact.
       checks: write # Required to add status summary.
       contents: read # Required to checkout repository.
       id-token: write # Required to authenticate via OIDC.
       issues: write # Required to add drift detection issues.
-      pull-requests: write # Required to add PR comment and label.
-    environment: development
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        targets: ${{ fromJson(needs.targets.outputs.targets) }}
+    environment: ${{ contains(matrix.targets, 'production') && 'production' || 'development' }}
     env:
       TF_TOKEN_APP_TERRAFORM_IO: ${{ secrets.TF_TOKEN_APP_TERRAFORM_IO }}
+      SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        with:
+          persist-credentials: false
+
+      # This is required because the 'environment' context does not exist, so cannot be referenced
+      # by the steps that need it
+      - name: Set deployment environment as an environment variable
+        run: |
+          echo "ENVIRONMENT=${{ contains(matrix.targets, 'production') && 'production' || 'development' }}" >> $GITHUB_ENV
 
       - name: Configure AWS credentials via OIDC
         uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # v4.0.2
         with:
           aws-region: us-east-1
-          role-to-assume: ${{ secrets.AWS_DEV_OIDC_ROLE_ARN }}
-          role-session-name: gitops2024-development-terraform-deploy
+          role-to-assume: ${{ secrets[format('GHA_3WARE_OIDC_{0}', env.ENVIRONMENT)] }}
+          role-session-name: gitops2024-drift-${{ env.ENVIRONMENT }}
 
       - name: Terraform Plan
-        uses: devsectop/tf-via-pr@f1acaae1d94826457fa57bc65f1df318fd81b3bc # v12.0.0
+        uses: devsectop/tf-via-pr@9dfb2360a5b7d5c3385276221e6e372467199e46 # v12.0.3
         id: drift-plan
         with:
-          working-directory: terraform/development
+          working-directory: ${{ matrix.targets }}
           command: plan
-          hide-args: true
+          arg-refresh-only: true
+          label-pr: false
           plan-encrypt: ${{ secrets.PGP_SECRET_SIGNING_PASSPHRASE }}
 
       - name: Create Drift Issue
