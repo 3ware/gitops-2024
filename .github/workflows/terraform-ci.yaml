@@ -214,4 +214,3 @@ jobs:
           arg-lock: ${{ github.event_name == 'merge_group' }}
           working-directory: ${{ matrix.targets }}
           plan-encrypt: ${{ secrets.PGP_SECRET_SIGNING_PASSPHRASE }}
-          comment-pr: recreate
