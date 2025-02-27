@@ -18,6 +18,12 @@
       "enabled": true
     }
   ],
+  "terraform": {
+    "enabled": true,
+    "minimumReleaseAge": "3 days",
+    "commitMessagePrefix": "feat(iac): ",
+    "commitMessageTopic": "{{depName}}"
+  },
   "tflint-plugin": {
     "enabled": true,
     "fileMatch": ["\\.tflint_(ci|trunk)\\.hcl$"],
