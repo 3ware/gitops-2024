@@ -39,7 +39,9 @@ jobs:
         with:
           dir_names: true
           dir_names_max_depth: 2
-          files: terraform/**
+          files: |
+            terraform/**
+            **/.hcl
           matrix: true
 
   terraform-deploy:
