@@ -12,11 +12,15 @@
       "minimumReleaseAge": "3 days",
       "commitMessagePrefix": "feat({{depName}}): ",
       "commitMessageTopic": "{{depName}} provider"
+    },
+    {
+      "matchDatasources": ["github-releases"],
+      "enabled": true
     }
   ],
   "tflint-plugin": {
     "enabled": true,
-    "fileMatch": ["\\.tflint\\.hcl$", "\\.tflint_(ci|trunk)\\.hcl$"],
+    "fileMatch": ["\\.tflint_(ci|trunk)\\.hcl$"],
     "minimumReleaseAge": "3 days",
     "commitMessagePrefix": "feat({{depName}}): "
   },
