@@ -22,7 +22,8 @@
     "enabled": true,
     "fileMatch": ["\\.tflint_(ci|trunk)\\.hcl$"],
     "minimumReleaseAge": "3 days",
-    "commitMessagePrefix": "feat({{depName}}): "
+    "commitMessagePrefix": "feat(tflint): ",
+    "commitMessageTopic": "{{depName}}"
   },
   "vulnerabilityAlerts": {
     "addLabels": ["security"],
