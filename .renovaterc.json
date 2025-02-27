@@ -14,6 +14,12 @@
       "commitMessageTopic": "{{depName}} provider"
     }
   ],
+  "tflint-plugin": {
+    "enabled": true,
+    "fileMatch": ["\\.tflint\\.hcl$", "\\.tflint_(ci|trunk)\\.hcl$"],
+    "minimumReleaseAge": "3 days",
+    "commitMessagePrefix": "feat({{depName}}): "
+  },
   "vulnerabilityAlerts": {
     "addLabels": ["security"],
     "commitMessagePrefix": "fix(deps): ",
