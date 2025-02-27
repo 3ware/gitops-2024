@@ -12,6 +12,10 @@
       "minimumReleaseAge": "3 days",
       "commitMessagePrefix": "feat({{depName}}): ",
       "commitMessageTopic": "{{depName}} provider"
+    },
+    {
+      "matchDatasources": ["github-releases"],
+      "enabled": true
     }
   ],
   "tflint-plugin": {
