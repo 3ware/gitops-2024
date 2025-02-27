@@ -10,7 +10,7 @@
       "enabled": true,
       "addLabels": ["tf-update"],
       "minimumReleaseAge": "3 days",
-      "commitMessagePrefix": "feat({{depName}}): ",
+      "commitMessagePrefix": "feat(iac): ",
       "commitMessageTopic": "{{depName}} provider"
     },
     {
