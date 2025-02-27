@@ -1,0 +1,22 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "commitMessageLowerCase": "never",
+  "extends": ["security:only-security-updates"],
+  "enabledManagers": ["terraform", "tflint-plugin"],
+  "packageRules": [
+    {
+      "matchDatasources": ["terraform-provider"],
+      "registryUrls": ["https://registry.opentofu.org"],
+      "enabled": true,
+      "addLabels": ["tf-update"],
+      "minimumReleaseAge": "3 days",
+      "commitMessagePrefix": "feat({{depName}}): ",
+      "commitMessageTopic": "{{depName}} provider"
+    }
+  ],
+  "vulnerabilityAlerts": {
+    "addLabels": ["security"],
+    "commitMessagePrefix": "fix(deps): ",
+    "rangeStrategy": "auto"
+  }
+}
