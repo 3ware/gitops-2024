@@ -9,6 +9,27 @@
     "terraform",
     "tflint-plugin"
   ],
+  // manager block. fileMatch must be configured here and not in packageRules because
+  // packageRules can matchManagers
+  "terraform": {
+    "enabled": true,
+    //"minimumReleaseAge": "3 days",
+    "commitMessagePrefix": "feat(iac): ",
+    "commitMessageTopic": "{{depName}}",
+    // bump required because v1.11.0, for example, satisfies the range "~> 1.9"
+    "rangeStrategy": "bump"
+  },
+  "tflint-plugin": {
+    "enabled": true,
+    "fileMatch": [
+      // match all .tflint_ci.hcl and .tflint_trunk.hcl files
+      // 'ci' and 'trunk' have different configurations
+      "\\.tflint_(ci|trunk)\\.hcl$"
+    ],
+    "minimumReleaseAge": "3 days",
+    "commitMessagePrefix": "feat(tflint): ",
+    "commitMessageTopic": "{{depName}}"
+  },
   "packageRules": [
     {
       // datasources look up dependency versions from a registry
@@ -37,23 +58,6 @@
       "enabled": true
     }
   ],
-  "terraform": {
-    "enabled": true,
-    //"minimumReleaseAge": "3 days",
-    "commitMessagePrefix": "feat(iac): ",
-    "commitMessageTopic": "{{depName}}"
-  },
-  "tflint-plugin": {
-    "enabled": true,
-    "fileMatch": [
-      // match all .tflint_ci.hcl and .tflint_trunk.hcl files
-      // 'ci' and 'trunk' have different configurations
-      "\\.tflint_(ci|trunk)\\.hcl$"
-    ],
-    "minimumReleaseAge": "3 days",
-    "commitMessagePrefix": "feat(tflint): ",
-    "commitMessageTopic": "{{depName}}"
-  },
   "vulnerabilityAlerts": {
     "addLabels": [
       "security"
