@@ -16,6 +16,7 @@
     //"minimumReleaseAge": "3 days",
     "commitMessagePrefix": "feat(iac): ",
     "commitMessageTopic": "{{depName}}",
+    // bump required because v1.11.0, for example, satisfies the range "~> 1.9"
     "rangeStrategy": "bump"
   },
   "tflint-plugin": {
