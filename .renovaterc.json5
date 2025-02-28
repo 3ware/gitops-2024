@@ -15,7 +15,8 @@
     "enabled": true,
     //"minimumReleaseAge": "3 days",
     "commitMessagePrefix": "feat(iac): ",
-    "commitMessageTopic": "{{depName}}"
+    "commitMessageTopic": "{{depName}}",
+    "rangeStrategy": "bump"
   },
   "tflint-plugin": {
     "enabled": true,
