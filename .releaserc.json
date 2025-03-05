@@ -6,9 +6,19 @@
       {
         "preset": "conventionalcommits",
         "releaseRules": [
-          { "breaking": true, "release": "major" },
-          { "type": "refactor", "release": "minor" },
-          { "type": "chore", "scope": "deps", "release": "patch" }
+          {
+            "breaking": true,
+            "release": "major"
+          },
+          {
+            "release": "minor",
+            "type": "refactor"
+          },
+          {
+            "release": "patch",
+            "scope": "deps",
+            "type": "chore"
+          }
         ]
       }
     ],
@@ -18,14 +28,32 @@
         "preset": "conventionalcommits",
         "presetConfig": {
           "types": [
-            { "type": "refactor", "section": "Enhancement", "hidden": false },
-            { "type": "feat", "section": "Features", "hidden": false },
-            { "type": "fix", "section": "Bug Fixes", "hidden": false },
             {
-              "type": "chore",
+              "hidden": false,
+              "section": "Enhancement",
+              "type": "refactor"
+            },
+            {
+              "hidden": false,
+              "section": "Features",
+              "type": "feat"
+            },
+            {
+              "hidden": false,
+              "section": "Bug Fixes",
+              "type": "fix"
+            },
+            {
+              "hidden": false,
               "scope": "deps",
-              "section": "Chores",
-              "hidden": false
+              "section": "Security",
+              "type": "fix"
+            },
+            {
+              "hidden": false,
+              "scope": "deps",
+              "section": "Dependencies",
+              "type": "chore"
             }
           ]
         }
@@ -34,9 +62,9 @@
     [
       "@semantic-release/github",
       {
-        "successComment": "This ${issue.pull_request ? 'PR is included' : 'issue has been resolved'} in version ${nextRelease.version}",
         "labels": false,
-        "releasedLabels": false
+        "releasedLabels": false,
+        "successComment": "This ${issue.pull_request ? 'PR is included' : 'issue has been resolved'} in version ${nextRelease.version}"
       }
     ],
     [
