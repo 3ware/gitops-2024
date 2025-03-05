@@ -2,33 +2,31 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "commitMessageLowerCase": "never", // Ensures sentence case commit messages to comply with commitlint rules
   "extends": [
+    "helpers:pinGitHubActionDigests",
     "security:only-security-updates"
   ],
   // the manager module looks for files and extracts their dependencies
   "enabledManagers": [
+    "github-actions",
     "terraform",
     "tflint-plugin"
   ],
-  // manager block. fileMatch must be configured here and not in packageRules because
-  // packageRules can matchManagers
-  "terraform": {
+  "github-actions": {
     "enabled": true,
-    //"minimumReleaseAge": "3 days",
-    "commitMessagePrefix": "feat(iac): ",
-    "commitMessageTopic": "{{depName}}",
-    // bump required because v1.11.0, for example, satisfies the range "~> 1.9"
-    "rangeStrategy": "bump"
+    "commitMessagePrefix": "ci(gha): ",
+    "ignorePaths": [
+      ".trunk/**" // Ignore any updates for the trunk setup-ci action
+    ]
   },
   "tflint-plugin": {
     "enabled": true,
+    "commitMessagePrefix": "feat(tflint): ",
+    "commitMessageTopic": "{{depName}}",
     "fileMatch": [
       // match all .tflint_ci.hcl and .tflint_trunk.hcl files
       // 'ci' and 'trunk' have different configurations
       "\\.tflint_(ci|trunk)\\.hcl$"
-    ],
-    "minimumReleaseAge": "3 days",
-    "commitMessagePrefix": "feat(tflint): ",
-    "commitMessageTopic": "{{depName}}"
+    ]
   },
   "packageRules": [
     {
@@ -36,24 +34,32 @@
       "matchDatasources": [
         "terraform-provider"
       ],
+      // must be explicitly enabled due to security preset disabling all packageRules
+      "enabled": true,
       // we want to look up dependencies from the OpenTofu registry
       "registryUrls": [
         "https://registry.opentofu.org"
       ],
-      // must be explicitly enabled due to security preset disabling all packageRules
-      "enabled": true,
       "addLabels": [
         "tf-update"
       ],
-      // terraform-provider datasource has release timestamp support
-      //"minimumReleaseAge": "3 days",
       "commitMessagePrefix": "feat(iac): ",
-      "commitMessageTopic": "{{depName}} provider"
+      "commitMessageTopic": "{{depName}} provider",
+      // terraform-provider datasource has release timestamp support
+      "minimumReleaseAge": "3 days",
+      // bump required because v6.6.0, for example, satisfies the range "~> 6.5"
+      "rangeStrategy": "bump"
     },
     {
-      // this datasource is required for the tflint-plugin manager and tofu required version
       "matchDatasources": [
-        "github-releases"
+        "github-releases" // data source for the tflint-plugin manager and tofu required_version
+      ],
+      "enabled": true,
+      "minimumReleaseAge": "3 days"
+    },
+    {
+      "matchDatasources": [
+        "github-tags" // data source for github-actions
       ],
       "enabled": true
     }
