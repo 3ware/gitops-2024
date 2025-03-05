@@ -12,11 +12,11 @@ charset = utf-8
 trim_trailing_whitespace = true
 insert_final_newline = true
 
+# Do not trim trailing whitespace on diff files as it can be used for alignment
+[*.diff]
+trim_trailing_whitespace = false
+
 # Do not trim trailing whitespace on Markdown files as double space can be used
 # for a newline
 [*.md]
 trim_trailing_whitespace = false
-
-[*.rego]
-indent_style = tab
-indent_size = 4
