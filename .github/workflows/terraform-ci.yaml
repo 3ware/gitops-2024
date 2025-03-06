@@ -125,7 +125,7 @@ jobs:
       # Add PR comment with formatting and validation errors
       - name: Add PR comment on terraform failure
         if: ${{ steps.tf-fmt.outputs.exitcode != 0 || steps.tf-validate.outputs.exitcode != 0 }}
-        uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
+        uses: marocchino/sticky-pull-request-comment@52423e01640425a022ef5fd42c6fb5f633a02728 # v2.9.1
         with:
           header: test-${{ matrix.targets }}
           recreate: true
@@ -175,7 +175,7 @@ jobs:
       # Add PR comment when TFLint detects a violation
       - name: Add PR comment on TFLint failure
         if: ${{ steps.tflint.outputs.exitcode != 0 }}
-        uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
+        uses: marocchino/sticky-pull-request-comment@52423e01640425a022ef5fd42c6fb5f633a02728 # v2.9.1
         with:
           header: test-${{ matrix.targets }}
           recreate: true
@@ -198,7 +198,7 @@ jobs:
 
       - name: Update PR comment for Test success
         if: ${{ github.event_name == 'pull_request' }}
-        uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
+        uses: marocchino/sticky-pull-request-comment@52423e01640425a022ef5fd42c6fb5f633a02728 # v2.9.1
         with:
           header: test-${{ matrix.targets }}
           recreate: true
