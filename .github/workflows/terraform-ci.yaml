@@ -153,7 +153,7 @@ jobs:
       # Install TFLint; required to download plugins
       - name: Install TFLint
         if: ${{ github.event_name == 'pull_request' }}
-        uses: terraform-linters/setup-tflint@15ef44638cb215296e7ba9e7a41f20b5b06f4784 # v4.0.0
+        uses: terraform-linters/setup-tflint@19a52fbac37dacb22a09518e4ef6ee234f2d4987 # v4.0.0
         with:
           tflint_version: v0.53.0
           tflint_wrapper: true
