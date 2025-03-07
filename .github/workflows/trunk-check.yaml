@@ -27,6 +27,6 @@ jobs:
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
       - name: Trunk Check
-        uses: trunk-io/trunk-action@0c109cf103b1bf745bb0cd8ec19d00a4609527d8 # v1.1.17
+        uses: trunk-io/trunk-action@4d5ecc89b2691705fd08c747c78652d2fc806a94 # v1.1.19
         with:
           arguments: --filter -tflint,-terraform
