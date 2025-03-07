@@ -19,5 +19,5 @@ jobs:
     needs: [validate-pr-title]
     permissions:
       checks: read
-    uses: 3ware/workflows/.github/workflows/wait-for-checks.yaml@fbeb3bb506c61e0d263c6b7dd4cb57c76923001b # 4.14.0
+    uses: 3ware/workflows/.github/workflows/wait-for-checks.yaml@fix/checks-auto-approve
     secrets: inherit
