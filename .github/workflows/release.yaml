@@ -13,5 +13,5 @@ jobs:
   semantic-release:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     name: Release
-    uses: 3ware/workflows/.github/workflows/release.yaml@fbeb3bb506c61e0d263c6b7dd4cb57c76923001b # v4.14.0
+    uses: 3ware/workflows/.github/workflows/release.yaml@2a21f74e677a0701b8ab17539810c9897e278b34 # v4.14.1
     secrets: inherit
