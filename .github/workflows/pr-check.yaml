@@ -12,7 +12,7 @@ permissions: {}
 
 jobs:
   validate-pr-title:
-    if: ${{ github.event_name == 'pull_request' }}
+    if: ${{ github.event_name == 'pull_request_target' }}
     name: Validate PR title
     permissions:
       contents: read
@@ -20,7 +20,7 @@ jobs:
     uses: 3ware/workflows/.github/workflows/pr-title.yaml@2a21f74e677a0701b8ab17539810c9897e278b34 # 4.14.1
 
   labeler:
-    if: ${{ github.event_name == 'pull_request' }}
+    if: ${{ github.event_name == 'pull_request_target' }}
     name: Labeler
     needs: [validate-pr-title]
     permissions:
