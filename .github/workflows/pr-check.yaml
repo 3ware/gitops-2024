@@ -1,23 +1,49 @@
 name: PR Check
+run-name: ${{ github.event_name == 'merge_group' && github.event.merge_group.head_commit.message || ''}}
+
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, edited, reopened, synchronize]
+  merge_group:
+    types: [checks_requested]
 
 # Disable permissions for all available scopes
 permissions: {}
 
 jobs:
   validate-pr-title:
+    if: ${{ github.event_name == 'pull_request' }}
     name: Validate PR title
     permissions:
       contents: read
       pull-requests: write
     uses: 3ware/workflows/.github/workflows/pr-title.yaml@2a21f74e677a0701b8ab17539810c9897e278b34 # 4.14.1
 
-  enforce-all-checks:
-    name: Checks
+  labeler:
+    if: ${{ github.event_name == 'pull_request' }}
+    name: Labeler
     needs: [validate-pr-title]
     permissions:
+      contents: read
+      pull-requests: write
+    concurrency: labeler-${{ github.event.pull_request.number }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
+        with:
+          persist-credentials: false
+          sparse-checkout: .github/labeler.yaml
+
+      - uses: actions/labeler@8558fd74291d67161a8a78ce36a881fa63b766a9 # 5.0.0
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          configuration-path: .github/labeler.yaml
+
+  enforce-all-checks:
+    name: Checks
+    #needs: [validate-pr-title]
+    permissions:
       checks: read
-    uses: 3ware/workflows/.github/workflows/wait-for-checks.yaml@2a21f74e677a0701b8ab17539810c9897e278b34 # 4.14.1
+    uses: 3ware/workflows/.github/workflows/wait-for-checks.yaml@ref/auto-approve # 4.14.1
     secrets: inherit
