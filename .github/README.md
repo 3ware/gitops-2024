@@ -209,7 +209,7 @@ prdPlan -->|Approve PR|TFPass
 #### Actions Used
 
 - [changed-files](https://github.com/tj-actions/changed-files)
-- [TF-via-PR](https://github.com/DevSecTop/TF-via-PR)
+- [TF-via-PR](https://github.com/OP5dev/TF-via-PR)
 - [Infracost](https://github.com/infracost/infracost)
 - [Setup Terraform](https://github.com/hashicorp/setup-terraform/commits/main/)
 - [Setup TFLint](https://github.com/terraform-linters/setup-tflint)
@@ -248,7 +248,7 @@ Uses a matrix strategy to run in each directory identified in the targets job.
 
 ##### Plan
 
-When the validation steps have succeeded - a ` terraform plan` will be run. The conditional statement runs `plan` on a `pull_request` event. The workflow uses [TF-via-PR](https://github.com/DevSecTop/TF-via-PR). This action adds a high level plan and detailed drop down style plan to the workflow summary and updates the pull request with a comment.
+When the validation steps have succeeded - a ` terraform plan` will be run. The conditional statement runs `plan` on a `pull_request` event. The workflow uses [TF-via-PR](https://github.com/OP5dev/TF-via-PR). This action adds a high level plan and detailed drop down style plan to the workflow summary and updates the pull request with a comment.
 
 ##### Apply
 
@@ -277,4 +277,4 @@ Generate a CHANGELOG and version tag using [semantic release](https://github.com
 
 ## Contributions
 
-- Special mention to the maintainer of [TF-via-PR](https://github.com/DevSecTop/TF-via-PR) for responding to queries quickly and proactively suggesting workflow improvements.
+- Special mention to the maintainer of [TF-via-PR](https://github.com/OP5dev/TF-via-PR) for responding to queries quickly and proactively suggesting workflow improvements.
