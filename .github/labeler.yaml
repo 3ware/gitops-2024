@@ -1,3 +1,4 @@
 auto-approve:
-  - base-branch: [main]
-  - head-branch: ["project/[a-z]+-config", trunk-io/update-trunk]
+  - all:
+      - base-branch: [main]
+      - head-branch: ["project/[a-z]+-config"]

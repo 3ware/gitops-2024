@@ -42,8 +42,23 @@ jobs:
 
   enforce-all-checks:
     name: Checks
-    #needs: [validate-pr-title]
     permissions:
       checks: read
     uses: 3ware/workflows/.github/workflows/wait-for-checks.yaml@ref/auto-approve # 4.14.1
     secrets: inherit
+
+  auto-approve-pr:
+    if: ${{ github.event_name == 'pull_request_target' && contains(github.event.pull_request.labels.*.name, 'auto-approve') }}
+    needs: [enforce-all-checks]
+    permissions:
+      pull-requests: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Dump PR event
+        run: echo "${{ toJson(github.event) }}"
+      - name: Auto Approve PR
+        uses: hmarr/auto-approve-action@f0939ea97e9205ef24d872e76833fa908a770363 # v4.0.0
+        with:
+          github-token: ${{ secrets.PR_APPROVAL_PAT }}
+          review-message: All checks passed. Auto Approved.
