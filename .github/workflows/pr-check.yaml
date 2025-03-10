@@ -30,12 +30,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
         with:
           persist-credentials: false
           sparse-checkout: .github/labeler.yaml
 
-      - uses: actions/labeler@8558fd74291d67161a8a78ce36a881fa63b766a9 # 5.0.0
+      - name: Label PR
+        uses: actions/labeler@8558fd74291d67161a8a78ce36a881fa63b766a9 # 5.0.0
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           configuration-path: .github/labeler.yaml
@@ -49,6 +51,7 @@ jobs:
 
   auto-approve-pr:
     if: ${{ github.event_name == 'pull_request_target' && contains(github.event.pull_request.labels.*.name, 'auto-approve') }}
+    name: Auto Approve PR
     needs: [enforce-all-checks]
     permissions:
       pull-requests: read
@@ -56,7 +59,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Dump PR event
-        run: echo "${{ toJson(github.event) }}"
+        run: echo '${{ toJson(github.event) }}'
       - name: Auto Approve PR
         uses: hmarr/auto-approve-action@f0939ea97e9205ef24d872e76833fa908a770363 # v4.0.0
         with:
