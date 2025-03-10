@@ -18,6 +18,7 @@
         "gha",
         "iac",
         "infracost",
+        "labeler",
         "pr-check",
         "renovate",
         "release",
