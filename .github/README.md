@@ -110,14 +110,14 @@ The [debate rumbles on](https://terramate.io/rethinking-iac/mastering-terraform-
 
 Another debate. The best argument I have heard for directories was in the Q&A session on 19/10/2024:
 
-> _"anyone should be able to `cd` into a terraform working directory and simply run `terraform plan` without have to worry about workspaces and variable files"_
+> _"anyone should be able to `cd` into a terraform working directory and simply run `terraform plan` without having to worry about workspaces and variable files"_
 
 The workflow uses [changed-files](https://github.com/tj-actions/changed-files) to find the directories containing terraform changes. The output of this job is used to define the matrix strategy for the terraform workflow.
 
 Each directory is mapped to an environment which achieves 2 things:
 
-- Secrets, in the case, the AWS roles, are stored in the [environment](https://docs.github.com/en/actions/managing-workflow-runs-and-deployments/managing-deployments/managing-environments-for-deployment) - not the repository.
-- Deployments to production require additional approval.
+- Secrets, in this case, the AWS roles, are stored in the [environment](https://docs.github.com/en/actions/managing-workflow-runs-and-deployments/managing-deployments/managing-environments-for-deployment) - not the repository.
+- Deployments to production require additional approval, via environment protection rules.
 
 ### Branching Strategy
 
@@ -273,7 +273,6 @@ Generate a CHANGELOG and version tag using [semantic release](https://github.com
 ## To do list
 
 - [ ] Grafana Port Check
-- [ ] Fix drift detection for multiple environments
 
 ## Contributions
 
