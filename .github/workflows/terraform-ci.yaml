@@ -35,7 +35,7 @@ jobs:
 
       - name: Check changed directories
         id: directories
-        uses: tj-actions/changed-files@c3a1bb2c992d77180ae65be6ae6c166cf40f857c # v45.0.3
+        uses: tj-actions/changed-files@a284dc1814e3fd07f2e34267fc8f81227ed29fb8 # v45.0.9
         with:
           dir_names: true
           dir_names_max_depth: 2
