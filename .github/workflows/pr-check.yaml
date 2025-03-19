@@ -46,7 +46,7 @@ jobs:
     name: Checks
     permissions:
       checks: read
-    uses: 3ware/workflows/.github/workflows/wait-for-checks.yaml@48d83ea1c2248158f1b81f07532311f4417ae7e7
+    uses: 3ware/workflows/.github/workflows/wait-for-checks.yaml@34002181cc47c19445ac6527cb404b31c7d00646
     secrets: inherit
 
   auto-approve-pr:
