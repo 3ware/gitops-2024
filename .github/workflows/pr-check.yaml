@@ -17,7 +17,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-    uses: 3ware/workflows/.github/workflows/pr-title.yaml@2a21f74e677a0701b8ab17539810c9897e278b34 # 4.14.1
+    uses: 3ware/workflows/.github/workflows/pr-title.yaml@00ec3367b300beacba7ec64b1e4cc784d496d983 # v4.15.1
 
   labeler:
     if: ${{ github.event_name == 'pull_request_target' }}
@@ -31,13 +31,13 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
           sparse-checkout: .github/labeler.yaml
 
       - name: Label PR
-        uses: actions/labeler@8558fd74291d67161a8a78ce36a881fa63b766a9 # 5.0.0
+        uses: actions/labeler@8558fd74291d67161a8a78ce36a881fa63b766a9 # v5.0.0
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           configuration-path: .github/labeler.yaml
@@ -46,7 +46,7 @@ jobs:
     name: Checks
     permissions:
       checks: read
-    uses: 3ware/workflows/.github/workflows/wait-for-checks.yaml@48d83ea1c2248158f1b81f07532311f4417ae7e7
+    uses: 3ware/workflows/.github/workflows/wait-for-checks.yaml@00ec3367b300beacba7ec64b1e4cc784d496d983 # v4.15.1
     secrets: inherit
 
   auto-approve-pr:
