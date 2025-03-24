@@ -38,7 +38,7 @@ jobs:
           role-session-name: gitops2024-development-terraform-deploy
 
       - name: Terraform Plan
-        uses: devsectop/tf-via-pr@f1acaae1d94826457fa57bc65f1df318fd81b3bc # v12.0.0
+        uses: devsectop/tf-via-pr@f79c04e41fa1b365307a11a43a93e35c4b3d0adc # v13.2.1
         id: drift-plan
         with:
           working-directory: terraform/development

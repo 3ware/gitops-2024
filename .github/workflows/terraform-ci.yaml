@@ -210,7 +210,7 @@ jobs:
             #### :white_check_mark: TFLint ${{ steps.tf-validate.outcome }}
 
       - name: Provision TF
-        uses: devsectop/tf-via-pr@f1acaae1d94826457fa57bc65f1df318fd81b3bc # v12.0.0
+        uses: devsectop/tf-via-pr@f79c04e41fa1b365307a11a43a93e35c4b3d0adc # v13.2.1
         with:
           command: ${{ github.event_name == 'merge_group' && 'apply' || 'plan' }}
           arg-lock: ${{ github.event_name == 'merge_group' }}
