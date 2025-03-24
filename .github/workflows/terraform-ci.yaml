@@ -96,7 +96,7 @@ jobs:
       # Required, even though terraform is installed on the run because sometimes the plan and apply jobs will fail due to versions differences between
       # the runners
       - name: Install Terraform
-        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd
+        uses: hashicorp/setup-terraform@852ca175a624bfb8d1f41b0dbcf92b3556fbc25f
         with:
           terraform_version: 1.9.7
           terraform_wrapper: true
