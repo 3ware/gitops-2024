@@ -12,6 +12,9 @@
     "terraform",
     "tflint-plugin"
   ],
+  "ignorePaths": [
+    "iac/modules/**" // Ignore the IAC modules directory
+  ],
   "github-actions": {
     "enabled": true,
     "commitMessagePrefix": "ci(gha): ",
