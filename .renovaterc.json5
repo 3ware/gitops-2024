@@ -3,27 +3,27 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "commitMessageLowerCase": "never", // Ensures sentence case commit messages to comply with commitlint rules
   "extends": [
-    "helpers:pinGitHubActionDigests",
-    "security:only-security-updates"
+    "config:recommended",
+    "helpers:pinGitHubActionDigests"
   ],
+  "minimumReleaseAge": "3 days",
   // the manager module looks for files and extracts their dependencies
   "enabledManagers": [
     "github-actions",
     "terraform",
     "tflint-plugin"
   ],
+  // ignore paths must be global to prevent all data sources from being used
   "ignorePaths": [
     "iac/modules/**" // Ignore the IAC modules directory
   ],
   "github-actions": {
-    "enabled": true,
     "commitMessagePrefix": "ci(gha): ",
     "ignorePaths": [
       ".trunk/**" // Ignore any updates for the trunk setup-ci action
     ]
   },
   "tflint-plugin": {
-    "enabled": true,
     "commitMessagePrefix": "feat(tflint): ",
     "commitMessageTopic": "{{depName}}",
     "fileMatch": [
@@ -34,45 +34,36 @@
   },
   "packageRules": [
     {
-      // Major updates must be approved on the dependency dashboard
-      "matchUpdateTypes": [
-        "major"
-      ],
-      "dependencyDashboardApproval": true
-    },
-    {
-      // datasources look up dependency versions from a registry
       "matchDatasources": [
-        "terraform-provider"
+        "terraform-provider" // data source for terraform provider
       ],
-      // must be explicitly enabled due to security preset disabling all packageRules
-      "enabled": true,
       // we want to look up dependencies from the OpenTofu registry
       "registryUrls": [
         "https://registry.opentofu.org"
       ],
+      // sourceUrl required for release notes. This should be the URL of the provider's GitHub repository
+      // Example from renovate docs https://docs.renovatebot.com/templates/#split
+      // {{ lookup (split packageName '-') 1 }}
+      // packageName: "hashicorp/aws" should be "hashicorp/terraform-provider-aws" for example
+      // Not working. See open discussion: https://github.com/renovatebot/renovate/discussions/35153
+      // "sourceUrl": "https://github.com/{{ lookup (split packageName '/') 0 }}/terraform-provider-{{ lookup (split packageName '/') 1 }}",
       "addLabels": [
         "tf:update"
       ],
       "commitMessagePrefix": "feat(iac): ",
       "commitMessageTopic": "{{depName}} provider",
-      // terraform-provider datasource has release timestamp support
-      "minimumReleaseAge": "3 days",
       // bump required because v6.6.0, for example, satisfies the range "~> 6.5"
       "rangeStrategy": "bump"
     },
     {
-      "matchDatasources": [
-        "github-releases" // data source for the tflint-plugin manager and tofu required_version
+      // Major updates must be approved on the dependency dashboard
+      "matchUpdateTypes": [
+        "major"
       ],
-      "enabled": true,
-      "minimumReleaseAge": "3 days"
-    },
-    {
-      "matchDatasources": [
-        "github-tags" // data source for github-actions
+      "addLabels": [
+        "major"
       ],
-      "enabled": true
+      "dependencyDashboardApproval": true
     }
   ],
   "vulnerabilityAlerts": {
