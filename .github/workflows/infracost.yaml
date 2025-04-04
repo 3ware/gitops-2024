@@ -16,17 +16,18 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.repository }}
   cancel-in-progress: true
 
+defaults:
+  run:
+    shell: bash
+    working-directory: iac
+
 jobs:
   infracost:
     name: Infracost Pull Request Checks
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
-        working-directory: ./iac
     permissions:
       contents: read
       pull-requests: write
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - name: Setup Infracost
