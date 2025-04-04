@@ -1,4 +1,0 @@
-auto-approve:
-  - all:
-      - base-branch: [main]
-      - head-branch: ["project/[a-z]+-config"]
