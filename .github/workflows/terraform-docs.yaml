@@ -5,9 +5,10 @@ on:
     types: [closed]
     branches: [main]
     paths:
-      - terraform/**/*.tf
-      - terraform/**/*.tfvars
-      - terraform/**/*.tftpl
+      - iac/**/*.tf
+      - iac/**/*.tfvars
+      - iac/**/*.tftpl
+      - iac/**/*.hcl
 
 # Disable permissions for all available scopes
 permissions: {}

@@ -2,7 +2,7 @@ name: Delete old workflow runs
 on:
   schedule:
     - cron: 0 0 1 * *
-  workflow_call: {}
+  workflow_dispatch: {}
 
 # Disable permissions for all available scopes
 permissions: {}
