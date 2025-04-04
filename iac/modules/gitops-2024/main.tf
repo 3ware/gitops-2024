@@ -4,7 +4,7 @@ resource "aws_vpc" "gitops_vpc" {
   enable_dns_hostnames = true
 
   tags = {
-    Name = "gitops-vpc-${local.environment}"
+    Name = "gitops-vpc-${var.aws_environment}"
   }
 }
 
@@ -16,7 +16,7 @@ resource "aws_internet_gateway" "gitops_igw" {
   vpc_id = aws_vpc.gitops_vpc.id
 
   tags = {
-    Name = "gitops-igw-${local.environment}"
+    Name = "gitops-igw-${var.aws_environment}"
   }
 }
 
@@ -29,17 +29,17 @@ resource "aws_route_table" "gitops_rt" {
   }
 
   tags = {
-    Name = "gitops-rt-${local.environment}"
+    Name = "gitops-rt-${var.aws_environment}"
   }
 }
 
 resource "aws_subnet" "gitops_subnet" {
   vpc_id                  = aws_vpc.gitops_vpc.id
-  cidr_block              = var.subnet_cidr_block
+  cidr_block              = cidrsubnet(var.vpc_cidr_block, 8, 1)
   map_public_ip_on_launch = true
 
   tags = {
-    Name = "gitops-subnet-${local.environment}"
+    Name = "gitops-subnet-${var.aws_environment}"
   }
 }
 
@@ -63,7 +63,7 @@ resource "aws_vpc_security_group_ingress_rule" "grafana_ingress" {
   to_port           = 3000
 
   tags = {
-    Name = "grafana-ingress-sg-rule-${local.environment}"
+    Name = "grafana-ingress-sg-rule-${var.aws_environment}"
   }
 
   lifecycle {
@@ -78,7 +78,7 @@ resource "aws_vpc_security_group_egress_rule" "grafana_egress" {
   ip_protocol       = "-1"
 
   tags = {
-    Name = "grafana-egress-sg-rule-${local.environment}"
+    Name = "grafana-egress-sg-rule-${var.aws_environment}"
   }
 
   lifecycle {
@@ -107,10 +107,10 @@ resource "aws_instance" "grafana_server" {
   instance_type          = var.instance_type
   subnet_id              = aws_subnet.gitops_subnet.id
   vpc_security_group_ids = [aws_security_group.grafana_sg.id]
-  user_data              = file("userdata.tftpl")
+  user_data              = file("${path.module}/userdata.tftpl")
 
   tags = {
-    Name = "grafana-server-${local.environment}"
+    Name = "grafana-server-${var.aws_environment}"
   }
 }
 
