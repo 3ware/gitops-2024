@@ -26,7 +26,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-    uses: 3ware/workflows/.github/workflows/dependency-review.yaml@f469ee8612f15ec29656e569eb6c2b53f44b243e # v4.18.0
+    uses: 3ware/workflows/.github/workflows/dependency-review.yaml@04ad5cfbd2a791eb14d9647058bd55b3cbb48449 # v4.18.0
 
   enforce-all-checks:
     name: Checks
