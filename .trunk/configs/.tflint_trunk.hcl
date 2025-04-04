@@ -9,7 +9,6 @@ plugin "aws" {
   version = "0.33.0"
   source  = "github.com/terraform-linters/tflint-ruleset-aws"
 
-  # Deep check disabled for Trunk CLI because VSCode fails to prepare the workspace with
-  # AWS credential environment variables set
+  # Disabled for trunk because VSCode fails to prepare the workspace with AWS env vars enabled
   deep_check = false
 }

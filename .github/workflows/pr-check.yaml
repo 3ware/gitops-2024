@@ -4,6 +4,7 @@ run-name: ${{ github.event_name == 'merge_group' && github.event.merge_group.hea
 on:
   pull_request_target:
     types: [opened, edited, reopened, synchronize]
+    branches: [main]
   merge_group:
     types: [checks_requested]
 
@@ -19,28 +20,13 @@ jobs:
       pull-requests: write
     uses: 3ware/workflows/.github/workflows/pr-title.yaml@00ec3367b300beacba7ec64b1e4cc784d496d983 # v4.15.1
 
-  labeler:
+  dependency-review:
     if: ${{ github.event_name == 'pull_request_target' }}
-    name: Labeler
-    needs: [validate-pr-title]
+    name: Dependency Review
     permissions:
       contents: read
       pull-requests: write
-    concurrency: labeler-${{ github.event.pull_request.number }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        with:
-          persist-credentials: false
-          sparse-checkout: .github/labeler.yaml
-
-      - name: Label PR
-        uses: actions/labeler@8558fd74291d67161a8a78ce36a881fa63b766a9 # v5.0.0
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          configuration-path: .github/labeler.yaml
+    uses: 3ware/workflows/.github/workflows/dependency-review.yaml@f469ee8612f15ec29656e569eb6c2b53f44b243e # v4.18.0
 
   enforce-all-checks:
     name: Checks
@@ -48,20 +34,3 @@ jobs:
       checks: read
     uses: 3ware/workflows/.github/workflows/wait-for-checks.yaml@00ec3367b300beacba7ec64b1e4cc784d496d983 # v4.15.1
     secrets: inherit
-
-  auto-approve-pr:
-    if: ${{ github.event_name == 'pull_request_target' && contains(github.event.pull_request.labels.*.name, 'auto-approve') }}
-    name: Auto Approve PR
-    needs: [enforce-all-checks]
-    permissions:
-      pull-requests: read
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - name: Dump PR event
-        run: echo '${{ toJson(github.event) }}'
-      - name: Auto Approve PR
-        uses: hmarr/auto-approve-action@f0939ea97e9205ef24d872e76833fa908a770363 # v4.0.0
-        with:
-          github-token: ${{ secrets.PR_APPROVAL_PAT }}
-          review-message: All checks passed. Auto Approved.

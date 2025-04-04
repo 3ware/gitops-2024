@@ -1,0 +1,25 @@
+name: IAC Deploy
+run-name: ${{ github.event_name == 'merge_group' && github.event.merge_group.head_commit.message || ''}}
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+    branches: [main]
+  merge_group:
+    types: [checks_requested]
+
+permissions: {}
+
+jobs:
+  deploy-dev:
+    name: Deploy to Development Environment
+    permissions:
+      actions: read
+      checks: write
+      contents: read
+      id-token: write
+      pull-requests: write
+    uses: 3ware/workflows/.github/workflows/iac-deploy.yaml@742f0f5c35c5038dc3ab7df9f942f762f320d6b2 # v4.19.0
+    secrets: inherit
+    with:
+      environment: development
