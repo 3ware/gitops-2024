@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.0](https://github.com/3ware/gitops-2024/compare/v1.3.0...v2.0.0) (2025-04-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* **iac:** Restructure into environments and modules (#101)
+
+### Enhancement
+
+* **iac:** Restructure into environments and modules ([#101](https://github.com/3ware/gitops-2024/issues/101)) ([9f38b2b](https://github.com/3ware/gitops-2024/commit/9f38b2bcbd12702330fda8778485ccff5af695b3))
+
 ## [1.3.0](https://github.com/3ware/gitops-2024/compare/v1.2.0...v1.3.0) (2024-10-23)
 
 
