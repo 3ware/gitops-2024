@@ -31,13 +31,13 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Setup Infracost
-        uses: infracost/actions/setup@e9d6e6cd65e168e76b0de50ff9957d2fe8bb1832 # v3.0.0
+        uses: infracost/actions/setup@e9d6e6cd65e168e76b0de50ff9957d2fe8bb1832 # v3.0.1
         with:
           api-key: ${{ secrets.INFRACOST_API_KEY }}
 
       # Checkout the base branch of the pull request
       - name: Checkout repository
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           ref: ${{ github.event.pull_request.base.ref }}
           persist-credentials: false
@@ -51,9 +51,7 @@ jobs:
 
       # Checkout the current PR branch so we can create a diff.
       - name: Checkout PR branch
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
-        with:
-          persist-credentials: false
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       # Generate an Infracost diff and save it to a JSON file.
       - name: Generate Infracost diff
