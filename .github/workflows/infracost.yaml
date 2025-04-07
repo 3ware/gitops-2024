@@ -3,10 +3,12 @@ name: Infracost
 on:
   pull_request:
     branches: [main]
-    types: [opened, synchronize]
+    types: [opened, reopened, synchronize]
     paths:
-      - "**/*.tf"
-      - "**/*.tfvars"
+      - iac/**/*.tf
+      - iac/**/*.tfvars
+      - iac/**/*.tftpl
+      - iac/**/*.hcl
 
 permissions: {}
 
@@ -14,17 +16,18 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.repository }}
   cancel-in-progress: true
 
+defaults:
+  run:
+    shell: bash
+    working-directory: iac
+
 jobs:
   infracost:
     name: Infracost Pull Request Checks
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
-        working-directory: ./terraform
     permissions:
       contents: read
       pull-requests: write
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - name: Setup Infracost
@@ -37,6 +40,7 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           ref: ${{ github.event.pull_request.base.ref }}
+          persist-credentials: false
 
       # Generate Infracost JSON file as the baseline.
       - name: Generate Infracost cost estimate baseline
