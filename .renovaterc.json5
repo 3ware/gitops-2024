@@ -56,6 +56,18 @@
       "rangeStrategy": "bump"
     },
     {
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "pin",
+        "digest"
+      ],
+      "matchDepTypes": [
+        "action"
+      ],
+      "automerge": true // Automerge minor and patch updates for GitHub Actions
+    },
+    {
       // Major updates must be approved on the dependency dashboard
       "matchUpdateTypes": [
         "major"
