@@ -63,9 +63,11 @@
         "digest"
       ],
       "matchDepTypes": [
-        "action"
+        "action",
+        "plugin",
+        "required_provider"
       ],
-      "automerge": true // Automerge minor and patch updates for GitHub Actions
+      "automerge": true // Automerge minor and patch updates for GitHub Actions, TFLint plugins, and required providers
     },
     {
       // Major updates must be approved on the dependency dashboard
