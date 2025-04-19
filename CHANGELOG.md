@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.1.0](https://github.com/3ware/gitops-2024/compare/v2.0.0...v2.1.0) (2025-04-19)
+
+
+### Features
+
+* **iac:** Update aws provider to ~> 5.95 ([#41](https://github.com/3ware/gitops-2024/issues/41)) ([ad2b3ca](https://github.com/3ware/gitops-2024/commit/ad2b3ca0b9286a6f9952003d182064d4c0656134))
+* **tflint:** Update terraform-linters/tflint-ruleset-aws to v0.38.0 ([#44](https://github.com/3ware/gitops-2024/issues/44)) ([24821e6](https://github.com/3ware/gitops-2024/commit/24821e616d409b6f36e73cb946c424187f7bec6b))
+
 ## [2.0.0](https://github.com/3ware/gitops-2024/compare/v1.3.0...v2.0.0) (2025-04-07)
 
 
