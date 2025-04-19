@@ -18,7 +18,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-    uses: 3ware/workflows/.github/workflows/pr-title.yaml@7a3e4ea551868a1f4e1cd69ce25c0a3ca8b5e0db # v4.20.1
+    uses: 3ware/workflows/.github/workflows/pr-title.yaml@8ecdd703d6706fee10ec0dce5fa4066d967b634c # v4.21.0
 
   dependency-review:
     if: ${{ github.event_name == 'pull_request_target' }}
@@ -26,11 +26,11 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-    uses: 3ware/workflows/.github/workflows/dependency-review.yaml@7a3e4ea551868a1f4e1cd69ce25c0a3ca8b5e0db # v4.20.1
+    uses: 3ware/workflows/.github/workflows/dependency-review.yaml@8ecdd703d6706fee10ec0dce5fa4066d967b634c # v4.21.0
 
   enforce-all-checks:
     name: Checks
     permissions:
       checks: read
-    uses: 3ware/workflows/.github/workflows/wait-for-checks.yaml@7a3e4ea551868a1f4e1cd69ce25c0a3ca8b5e0db # v4.20.1
+    uses: 3ware/workflows/.github/workflows/wait-for-checks.yaml@8ecdd703d6706fee10ec0dce5fa4066d967b634c # v4.21.0
     secrets: inherit
