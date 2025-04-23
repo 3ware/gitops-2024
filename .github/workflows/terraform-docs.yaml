@@ -17,7 +17,7 @@ jobs:
   terraform-docs:
     if: ${{ github.event.pull_request.merged == true }}
     name: Terraform Docs
-    uses: 3ware/workflows/.github/workflows/terraform-docs.yaml@734372a063bf29df3dd2e04315dfad6698248eea # v4.21.1
+    uses: 3ware/workflows/.github/workflows/terraform-docs.yaml@3d024cbaf2eace91ae229d4cbba5cbd806fdeb91 # v4.21.4
     secrets: inherit
     with:
       tf-directory: terraform
