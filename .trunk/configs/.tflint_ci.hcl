@@ -6,7 +6,7 @@ plugin "terraform" {
 
 plugin "aws" {
   enabled = true
-  version = "0.38.0"
+  version = "0.39.0"
   source  = "github.com/terraform-linters/tflint-ruleset-aws"
 
   # Deep check can be enabled in CI/CD pipelines, where AWS credentials are set
