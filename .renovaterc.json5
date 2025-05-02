@@ -25,12 +25,7 @@
   },
   "tflint-plugin": {
     "commitMessagePrefix": "feat(tflint): ",
-    "commitMessageTopic": "{{depName}}",
-    "fileMatch": [
-      // match all .tflint_ci.hcl and .tflint_trunk.hcl files
-      // 'ci' and 'trunk' have different configurations
-      "\\.tflint_(ci|trunk)\\.hcl$"
-    ]
+    "commitMessageTopic": "{{depName}}"
   },
   "packageRules": [
     {
