@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.6.0](https://github.com/3ware/gitops-2024/compare/v2.5.0...v2.6.0) (2025-05-30)
+
+
+### Features
+
+* **iac:** Update aws provider to ~> 5.99 ([#121](https://github.com/3ware/gitops-2024/issues/121)) ([3d1c67f](https://github.com/3ware/gitops-2024/commit/3d1c67f4aa3d1886c1c493e7b969a3de3797ceed))
+
 ## [2.5.0](https://github.com/3ware/gitops-2024/compare/v2.4.0...v2.5.0) (2025-05-28)
 
 
