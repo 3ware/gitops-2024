@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.16.0](https://github.com/3ware/gitops-2024/compare/v2.15.0...v2.16.0) (2026-09-23)
+
+
+### Features
+
+* **tflint:** Update terraform-linters/tflint-ruleset-aws to v0.49.0 ([#205](https://github.com/3ware/gitops-2024/issues/205)) ([f50edf6](https://github.com/3ware/gitops-2024/commit/f50edf6a29bb5a92a3d9a3bfed1a1eb5c4380615))
+
 ## [2.15.0](https://github.com/3ware/gitops-2024/compare/v2.14.0...v2.15.0) (2026-07-02)
 
 
