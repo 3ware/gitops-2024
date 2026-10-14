@@ -19,7 +19,7 @@ jobs:
       contents: read
       id-token: write
       pull-requests: write
-    uses: 3ware/workflows/.github/workflows/iac-deploy.yaml@3d024cbaf2eace91ae229d4cbba5cbd806fdeb91 # v4.21.4
+    uses: 3ware/workflows/.github/workflows/iac-deploy.yaml@2f083d4e6080eb25ffbd5793a09cd85ac5bb9598 # v4.21.5
     secrets: inherit
     with:
       environment: development
